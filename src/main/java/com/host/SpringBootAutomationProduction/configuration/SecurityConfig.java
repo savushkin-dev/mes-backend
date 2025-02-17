@@ -50,6 +50,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers(HttpMethod.POST, "api/authentication/authenticate").permitAll()
                                 .requestMatchers(HttpMethod.POST, "api/authentication/registration").permitAll()
+                                .requestMatchers(HttpMethod.GET, "api/scheduler/{planId}").permitAll()
+                                .requestMatchers(HttpMethod.GET, "api/scheduler/plansId").permitAll()
                                 .anyRequest().authenticated()
                 )
 
