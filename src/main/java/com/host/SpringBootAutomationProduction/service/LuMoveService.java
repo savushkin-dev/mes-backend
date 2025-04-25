@@ -18,7 +18,7 @@ public class LuMoveService {
     public List<LuMove> getLuMoveDay() {
 
         // Параметры соединения
-        String url = "jdbc:sqlserver://10.164.30.215;database=naswms;encrypt=true;trustServerCertificate=true";
+        String url = "jdbc:sqlserver://10.164.35.215;database=naswms;encrypt=true;trustServerCertificate=true";
         String user = "nas";
         String password = "Nas2024$";
 
