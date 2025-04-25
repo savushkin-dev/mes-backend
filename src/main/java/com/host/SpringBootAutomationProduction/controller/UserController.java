@@ -1,7 +1,7 @@
 package com.host.SpringBootAutomationProduction.controller;
 
 import com.host.SpringBootAutomationProduction.dto.UserProfileDTO;
-import com.host.SpringBootAutomationProduction.model.User;
+import com.host.SpringBootAutomationProduction.model.postgres.User;
 import com.host.SpringBootAutomationProduction.security.UserCurDetails;
 import com.host.SpringBootAutomationProduction.util.UserValidator;
 import org.modelmapper.ModelMapper;

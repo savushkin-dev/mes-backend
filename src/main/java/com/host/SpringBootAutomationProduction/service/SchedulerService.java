@@ -1,8 +1,8 @@
 package com.host.SpringBootAutomationProduction.service;
 
 import com.host.SpringBootAutomationProduction.exceptions.NotFoundException;
-import com.host.SpringBootAutomationProduction.model.Plan;
-import com.host.SpringBootAutomationProduction.repositories.SchedulerRepository;
+import com.host.SpringBootAutomationProduction.model.postgres.Plan;
+import com.host.SpringBootAutomationProduction.repositories.postgres.SchedulerRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

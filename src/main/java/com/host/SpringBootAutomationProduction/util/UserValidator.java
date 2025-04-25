@@ -1,6 +1,6 @@
 package com.host.SpringBootAutomationProduction.util;
 
-import com.host.SpringBootAutomationProduction.model.User;
+import com.host.SpringBootAutomationProduction.model.postgres.User;
 import com.host.SpringBootAutomationProduction.security.UserCurDetails;
 import com.host.SpringBootAutomationProduction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

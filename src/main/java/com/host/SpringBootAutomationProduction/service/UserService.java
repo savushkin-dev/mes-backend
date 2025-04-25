@@ -1,7 +1,7 @@
 package com.host.SpringBootAutomationProduction.service;
 
-import com.host.SpringBootAutomationProduction.model.User;
-import com.host.SpringBootAutomationProduction.repositories.UsersRepository;
+import com.host.SpringBootAutomationProduction.model.postgres.User;
+import com.host.SpringBootAutomationProduction.repositories.postgres.UsersRepository;
 import com.host.SpringBootAutomationProduction.security.UserCurDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;

@@ -1,7 +1,7 @@
 package com.host.SpringBootAutomationProduction.configuration;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.host.SpringBootAutomationProduction.repositories.UsersRepository;
+import com.host.SpringBootAutomationProduction.repositories.postgres.UsersRepository;
 import com.host.SpringBootAutomationProduction.security.JWTUtil;
 import com.host.SpringBootAutomationProduction.service.PersonDetailsService;
 import jakarta.servlet.FilterChain;

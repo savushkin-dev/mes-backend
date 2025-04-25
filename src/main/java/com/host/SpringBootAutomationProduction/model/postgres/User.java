@@ -1,4 +1,4 @@
-package com.host.SpringBootAutomationProduction.model;
+package com.host.SpringBootAutomationProduction.model.postgres;
 
 import jakarta.persistence.*;
 import lombok.Getter;

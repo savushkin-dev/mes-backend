@@ -1,7 +1,7 @@
-package com.host.SpringBootAutomationProduction.repositories;
+package com.host.SpringBootAutomationProduction.repositories.postgres;
 
 
-import com.host.SpringBootAutomationProduction.model.User;
+import com.host.SpringBootAutomationProduction.model.postgres.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

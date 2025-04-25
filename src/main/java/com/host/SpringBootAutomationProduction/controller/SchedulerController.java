@@ -1,11 +1,7 @@
 package com.host.SpringBootAutomationProduction.controller;
 
-import com.host.SpringBootAutomationProduction.dto.LoginRequestDTO;
 import com.host.SpringBootAutomationProduction.dto.PlanDTO;
-import com.host.SpringBootAutomationProduction.dto.UserDTO;
-import com.host.SpringBootAutomationProduction.exceptions.UserNotCreatedException;
-import com.host.SpringBootAutomationProduction.model.Plan;
-import com.host.SpringBootAutomationProduction.model.User;
+import com.host.SpringBootAutomationProduction.model.postgres.Plan;
 import com.host.SpringBootAutomationProduction.service.SchedulerService;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;

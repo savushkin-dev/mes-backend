@@ -5,7 +5,7 @@ import com.host.SpringBootAutomationProduction.dto.LoginRequestDTO;
 import com.host.SpringBootAutomationProduction.dto.LoginResponseDTO;
 import com.host.SpringBootAutomationProduction.dto.UserDTO;
 import com.host.SpringBootAutomationProduction.exceptions.UserNotCreatedException;
-import com.host.SpringBootAutomationProduction.model.User;
+import com.host.SpringBootAutomationProduction.model.postgres.User;
 import com.host.SpringBootAutomationProduction.security.JWTUtil;
 import com.host.SpringBootAutomationProduction.service.PersonDetailsService;
 import com.host.SpringBootAutomationProduction.service.RegistrationService;
