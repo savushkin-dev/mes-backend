@@ -4,6 +4,7 @@ package com.host.SpringBootAutomationProduction.controller;
 import com.host.SpringBootAutomationProduction.dto.ReportTemplateDTO;
 import com.host.SpringBootAutomationProduction.model.LuMove;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
+import com.host.SpringBootAutomationProduction.service.DataSourceService;
 import com.host.SpringBootAutomationProduction.service.LuMoveService;
 import com.host.SpringBootAutomationProduction.service.ReportService;
 import org.modelmapper.ModelMapper;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -21,10 +23,13 @@ public class ReportController {
     private final ReportService reportService;
     private final LuMoveService luMoveService;
 
+    private final DataSourceService dataSourceService;
+
     @Autowired
-    public ReportController(ReportService reportService, LuMoveService luMoveService) {
+    public ReportController(ReportService reportService, LuMoveService luMoveService, DataSourceService dataSourceService) {
         this.reportService = reportService;
         this.luMoveService = luMoveService;
+        this.dataSourceService = dataSourceService;
     }
 
 
@@ -44,6 +49,24 @@ public class ReportController {
         reportService.saveOrUpdateReport(reportTemplate);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    @GetMapping("/data/{reportName}")
+    public ResponseEntity<?> getDataForReport(@PathVariable("reportName") String reportName) {
+        return ResponseEntity.ok(reportService.getDataForReport(reportName));
+    }
+
+
+    @PostMapping("/test")
+    public ResponseEntity<?> test(@RequestBody ReportTemplateDTO reportTemplateDTO){
+        ReportTemplate reportTemplate = convertToReportTemplate(reportTemplateDTO);
+        try {
+            return ResponseEntity.ok(dataSourceService.executeQuery2(reportTemplate));
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private ReportTemplate convertToReportTemplate(ReportTemplateDTO reportTemplateDTO) {
         return new ModelMapper().map(reportTemplateDTO, ReportTemplate.class);

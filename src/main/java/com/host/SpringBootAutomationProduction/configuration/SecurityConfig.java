@@ -54,6 +54,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "api/scheduler/plansId").permitAll()
                                 .requestMatchers(HttpMethod.POST, "api/report/create").permitAll()
                                 .requestMatchers(HttpMethod.GET, "api/report/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "api/report/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "test/**").permitAll()
                                 .anyRequest().authenticated()
                 )

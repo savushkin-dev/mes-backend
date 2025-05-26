@@ -23,6 +23,21 @@ public class ReportTemplate {
     @Column(name = "REPORT_NAME")
     private String reportName;
 
+    @Column(name = "DB_URL")
+    private String dbUrl;
+
+    @Column(name = "DB_USERNAME")
+    private String dbUsername;
+
+    @Column(name = "DB_PASSWORD")
+    private String dbPassword;
+
+    @Column(name = "DB_DRIVER")
+    private String dbDriver;
+
+    @Column(name = "SQL")
+    private String sql;
+
     @Column(name = "CONTENT")
     private String content;
 
