@@ -1,7 +1,10 @@
 package com.host.SpringBootAutomationProduction.service;
 
+import com.host.SpringBootAutomationProduction.exceptions.DataSourceNotRequestedException;
 import com.host.SpringBootAutomationProduction.model.DataSourceConfig;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
@@ -12,11 +15,11 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 public class DataSourceService {
 
     public DataSource createDataSource(DataSourceConfig config) {
-
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setUrl(config.getUrl());
         dataSource.setUsername(config.getUsername());
@@ -26,15 +29,31 @@ public class DataSourceService {
     }
 
     public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config) {
-        DataSource dataSource = createDataSource(config);
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        return jdbcTemplate.queryForList(sql);
+        try {
+            DataSource dataSource = createDataSource(config);
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+            return jdbcTemplate.queryForList(sql);
+        } catch (Exception e) {
+            log.error("Error executing query: {}, config: {}", sql, config);
+            throw new DataSourceNotRequestedException(e.getMessage());
+        }
     }
 
     public Map<String, String> splitSqlByTableName(String inputSql) {
         Map<String, String> result = new LinkedHashMap<>();
         if (inputSql == null || inputSql.isBlank()) return result;
 
+        List<String> queries = splitSqlString(inputSql);
+
+        for (String query : queries) {
+            String table = extractTableName(query);
+            result.put(table, query);
+        }
+
+        return result;
+    }
+
+    public List<String> splitSqlString(String inputSql) {
         List<String> queries = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         boolean inString = false;
@@ -60,13 +79,7 @@ public class DataSourceService {
         if (!remaining.isEmpty()) {
             queries.add(remaining);
         }
-
-        for (String query : queries) {
-            String table = extractTableName(query);
-            result.put(table, query);
-        }
-
-        return result;
+        return queries;
     }
 
     private String extractTableName(String sql) {
@@ -89,30 +102,6 @@ public class DataSourceService {
         return "unknown_table_" + UUID.randomUUID();
     }
 
-    public List<Map<String, Object>> executeQuery2(ReportTemplate reportTemplate) throws SQLException {
-
-        try (Connection conn = DriverManager.getConnection(reportTemplate.getDbUrl(),
-                reportTemplate.getReportName(),
-                reportTemplate.getDbPassword());
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(reportTemplate.getSql())) {
-
-            List<Map<String, Object>> result = new ArrayList<>();
-            ResultSetMetaData meta = rs.getMetaData();
-
-            while (rs.next()) {
-                Map<String, Object> row = new HashMap<>();
-                for (int i = 1; i <= meta.getColumnCount(); i++) {
-                    row.put(meta.getColumnLabel(i), rs.getObject(i));
-                }
-                result.add(row);
-            }
-
-            return result;
-        }
-
-
-    }
 
 
 

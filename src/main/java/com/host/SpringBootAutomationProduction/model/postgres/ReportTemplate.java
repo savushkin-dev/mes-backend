@@ -2,15 +2,13 @@ package com.host.SpringBootAutomationProduction.model.postgres;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 @Entity
 @Table(name = "BD_REPORT")
 public class ReportTemplate {
@@ -22,6 +20,9 @@ public class ReportTemplate {
 
     @Column(name = "REPORT_NAME")
     private String reportName;
+
+    @Column(name = "REPORT_CATEGORY")
+    private String reportCategory;
 
     @Column(name = "DB_URL")
     private String dbUrl;

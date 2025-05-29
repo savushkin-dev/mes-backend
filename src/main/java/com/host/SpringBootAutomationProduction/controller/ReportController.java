@@ -4,18 +4,19 @@ package com.host.SpringBootAutomationProduction.controller;
 import com.host.SpringBootAutomationProduction.dto.ReportTemplateDTO;
 import com.host.SpringBootAutomationProduction.model.LuMove;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
-import com.host.SpringBootAutomationProduction.service.DataSourceService;
 import com.host.SpringBootAutomationProduction.service.LuMoveService;
 import com.host.SpringBootAutomationProduction.service.ReportService;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/report")
 public class ReportController {
@@ -23,48 +24,49 @@ public class ReportController {
     private final ReportService reportService;
     private final LuMoveService luMoveService;
 
-    private final DataSourceService dataSourceService;
 
     @Autowired
-    public ReportController(ReportService reportService, LuMoveService luMoveService, DataSourceService dataSourceService) {
+    public ReportController(ReportService reportService, LuMoveService luMoveService) {
         this.reportService = reportService;
         this.luMoveService = luMoveService;
-        this.dataSourceService = dataSourceService;
     }
 
 
     @GetMapping("/{reportName}")
     public ReportTemplateDTO getReportByName(@PathVariable("reportName") String reportName) {
-        return convertToReportTemplateDTO(reportService.findByReportName(reportName));
+        log.info("Received request '/{reportName}': {}", reportName);
+        return convertToReportTemplateDTO(reportService.findByReportName(reportName)).encrypt();
     }
 
-    @GetMapping("/reportsName")
+    @GetMapping("/names")
     public ResponseEntity<?> getReportNameList() {
         return ResponseEntity.ok(reportService.findAllReportName());
     }
 
+    @GetMapping("/categories")
+    public ResponseEntity<List<Map<String, Object>>> getGroupedReports() {
+        return ResponseEntity.ok(reportService.getReportsNameGroupedByCategory());
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> createOrUpdateReport(@RequestBody ReportTemplateDTO reportTemplateDTO) {
-        ReportTemplate reportTemplate = convertToReportTemplate(reportTemplateDTO);
+        log.info("Received request '/create': {}", reportTemplateDTO);
+        ReportTemplate reportTemplate = convertToReportTemplate(reportTemplateDTO.decrypt());
         reportService.saveOrUpdateReport(reportTemplate);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/data/{reportName}")
-    public ResponseEntity<?> getDataForReport(@PathVariable("reportName") String reportName) {
-        return ResponseEntity.ok(reportService.getDataForReport(reportName));
+    public ResponseEntity<?> getDataByReportName(@PathVariable("reportName") String reportName) {
+        log.info("Received request '/data/{reportName}': {}", reportName);
+        return ResponseEntity.ok(reportService.getDataByReportName(reportName));
     }
 
-
-    @PostMapping("/test")
-    public ResponseEntity<?> test(@RequestBody ReportTemplateDTO reportTemplateDTO){
-        ReportTemplate reportTemplate = convertToReportTemplate(reportTemplateDTO);
-        try {
-            return ResponseEntity.ok(dataSourceService.executeQuery2(reportTemplate));
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            throw new RuntimeException(e);
-        }
+    @PostMapping("/data")
+    public ResponseEntity<?> getDataForReport(@RequestBody ReportTemplateDTO reportTemplateDTO) {
+        log.info("Received request '/data': {}", reportTemplateDTO);
+        ReportTemplate reportTemplate = convertToReportTemplate(reportTemplateDTO.decrypt());
+        return ResponseEntity.ok(reportService.getDataForReport(reportTemplate));
     }
 
 
