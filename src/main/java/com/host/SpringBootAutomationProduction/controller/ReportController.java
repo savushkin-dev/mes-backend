@@ -1,6 +1,8 @@
 package com.host.SpringBootAutomationProduction.controller;
 
 
+import com.host.SpringBootAutomationProduction.dto.ParametersDTO;
+import com.host.SpringBootAutomationProduction.dto.ReportTemplateParametersDTO;
 import com.host.SpringBootAutomationProduction.dto.ReportTemplateDTO;
 import com.host.SpringBootAutomationProduction.model.LuMove;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
@@ -13,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +41,12 @@ public class ReportController {
         return convertToReportTemplateDTO(reportService.findByReportName(reportName)).encrypt();
     }
 
+    @GetMapping("/{reportName}/parameters")
+    public ResponseEntity<?> getTemplateParameters(@PathVariable String reportName) {
+        log.info("Received request '/{templateName}/parameters': {}", reportName);
+        return ResponseEntity.ok(reportService.getParameters(reportName));
+    }
+
     @GetMapping("/names")
     public ResponseEntity<?> getReportNameList() {
         return ResponseEntity.ok(reportService.findAllReportName());
@@ -56,17 +65,18 @@ public class ReportController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/data/{reportName}")
-    public ResponseEntity<?> getDataByReportName(@PathVariable("reportName") String reportName) {
+    @PostMapping("/data/{reportName}")
+    public ResponseEntity<?> getDataByReportName(@PathVariable("reportName") String reportName,
+                                                 @RequestBody ParametersDTO parameters) {
         log.info("Received request '/data/{reportName}': {}", reportName);
-        return ResponseEntity.ok(reportService.getDataByReportName(reportName));
+        return ResponseEntity.ok(reportService.getDataByReportName(reportName, parameters.getParameters()));
     }
 
     @PostMapping("/data")
-    public ResponseEntity<?> getDataForReport(@RequestBody ReportTemplateDTO reportTemplateDTO) {
-        log.info("Received request '/data': {}", reportTemplateDTO);
-        ReportTemplate reportTemplate = convertToReportTemplate(reportTemplateDTO.decrypt());
-        return ResponseEntity.ok(reportService.getDataForReport(reportTemplate));
+    public ResponseEntity<?> getDataForReport(@RequestBody ReportTemplateParametersDTO templateParametersDTO) {
+        log.info("Received request '/data': {}", templateParametersDTO);
+        ReportTemplate reportTemplate = convertToReportTemplate(templateParametersDTO.getReportTemplateDTO().decrypt());
+        return ResponseEntity.ok(reportService.getDataForReport(reportTemplate, templateParametersDTO.getParameters()));
     }
 
 

@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                                .requestMatchers("/actuator/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "api/authentication/authenticate").permitAll()
                                 .requestMatchers(HttpMethod.POST, "api/authentication/registration").permitAll()
                                 .requestMatchers(HttpMethod.GET, "api/scheduler/{planId}").permitAll()

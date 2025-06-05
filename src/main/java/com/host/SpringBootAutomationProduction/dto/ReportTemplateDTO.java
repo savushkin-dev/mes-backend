@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.List;
+
 @Getter
 @Setter
 @ToString
@@ -22,6 +24,7 @@ public class ReportTemplateDTO {
     private String sql;
     private String content;
     private String styles;
+    private String parameters;
 
     public ReportTemplateDTO encrypt() {
         setDbPassword(Encryption.encrypt(getDbPassword()));

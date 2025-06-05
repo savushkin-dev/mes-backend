@@ -4,13 +4,21 @@ import com.host.SpringBootAutomationProduction.exceptions.DataSourceNotRequested
 import com.host.SpringBootAutomationProduction.model.DataSourceConfig;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.Select;
+import org.springframework.jdbc.core.ColumnMapRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.math.BigDecimal;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +36,17 @@ public class DataSourceService {
         return dataSource;
     }
 
+//    public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config) {
+//        try {
+//            DataSource dataSource = createDataSource(config);
+//            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+//            return jdbcTemplate.queryForList(sql);
+//        } catch (Exception e) {
+//            log.error("Error executing query: {}, config: {}", sql, config);
+//            throw new DataSourceNotRequestedException(e.getMessage());
+//        }
+//    }
+
     public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config) {
         try {
             DataSource dataSource = createDataSource(config);
@@ -39,11 +58,77 @@ public class DataSourceService {
         }
     }
 
+    public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config,
+                                                  Map<String, String> parameters) {
+        try {
+            DataSource dataSource = createDataSource(config);
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlPrepared = sql.replaceAll(":\\w+", "?");
+            return jdbcTemplate.query(sqlPrepared, new PreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps) throws SQLException {
+                    // Преобразуем именованные параметры (:param) в позиционные (?)
+                    Pattern pattern = Pattern.compile(":\\w+");
+                    Matcher matcher = pattern.matcher(sql);
+                    int index = 1;
+
+                    while (matcher.find()) {
+                        String paramName = matcher.group().substring(1);
+                        String value = parameters.get(paramName);
+
+
+                        if (value == null) {
+                            ps.setNull(index, Types.NULL);
+                        } else if (isDate(value)) {
+                            ps.setDate(index, java.sql.Date.valueOf(value));
+                        } else if (isNumeric(value)) {
+                            ps.setBigDecimal(index, new BigDecimal(value));
+                        } else if (isBoolean(value)) {
+                            ps.setBoolean(index, Boolean.parseBoolean(value));
+                        } else {
+                            ps.setString(index, value);
+                        }
+                        index++;
+                    }
+                }
+            }, new ColumnMapRowMapper());
+        } catch (Exception e) {
+            log.error("Error executing query: {}, parameters: {}, config: {}", sql, parameters, config);
+            throw new DataSourceNotRequestedException(e.getMessage());
+        }
+    }
+
+
+    private boolean isDate(String value) {
+        try {
+            LocalDate.parse(value);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isNumeric(String value) {
+        return value.matches("-?\\d+(\\.\\d+)?");
+    }
+
+    private boolean isBoolean(String value) {
+        return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false");
+    }
+
+
     public Map<String, String> splitSqlByTableName(String inputSql) {
         Map<String, String> result = new LinkedHashMap<>();
         if (inputSql == null || inputSql.isBlank()) return result;
 
         List<String> queries = splitSqlString(inputSql);
+
+//        for (String query : queries) {
+//            if(!isValidSelectQuery(query)){
+//                throw new RuntimeException("Ошибка запроса: " + query);
+//            }
+//        } // ругается на AS в запросе
 
         for (String query : queries) {
             String table = extractTableName(query);
@@ -82,6 +167,37 @@ public class DataSourceService {
         return queries;
     }
 
+    public boolean isValidSelectQuery(String sql) {
+        try {
+            Statement statement = CCJSqlParserUtil.parse(sql);
+            if (!(statement instanceof Select)) return false;
+
+            String upperSql = sql.toUpperCase();
+
+            // Список слов которые запрещены
+            String[] forbiddenKeywords = {
+                    "INSERT", "UPDATE", "DELETE", "DROP", "ALTER",
+                    "TRUNCATE", "CREATE", "GRANT", "REVOKE",
+                    "EXEC", "EXECUTE", "MERGE", "CALL", "USE"
+            };
+
+            for (String keyword : forbiddenKeywords) {
+                if (upperSql.contains(keyword)) {
+                    return false;
+                }
+            }
+
+            if (!upperSql.trim().startsWith("SELECT")) {
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private String extractTableName(String sql) {
         String lower = sql.toLowerCase();
 
@@ -101,8 +217,6 @@ public class DataSourceService {
 
         return "unknown_table_" + UUID.randomUUID();
     }
-
-
 
 
 }

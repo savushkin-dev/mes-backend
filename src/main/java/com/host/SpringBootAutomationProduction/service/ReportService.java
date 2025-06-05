@@ -22,6 +22,7 @@ public class ReportService {
     private final DataSourceService dataSourceService;
 
 
+
     @Autowired
     public ReportService(ReportRepository reportRepository, DataSourceService dataSourceService) {
         this.reportRepository = reportRepository;
@@ -31,7 +32,8 @@ public class ReportService {
 
     public ReportTemplate findByReportName(String reportName) {
         Optional<ReportTemplate> reportTemplateOpt = reportRepository.findByReportName(reportName);
-        return reportTemplateOpt.orElseThrow(() -> new ReportTemplateNotFoundException("ReportTemplate not found with report name: " + reportName));
+        return reportTemplateOpt.orElseThrow(() ->
+                new ReportTemplateNotFoundException("ReportTemplate not found with report name: " + reportName));
 
     }
 
@@ -49,6 +51,7 @@ public class ReportService {
             reportTemplateToUpdate.setSql(reportTemplate.getSql());
             reportTemplateToUpdate.setContent(reportTemplate.getContent());
             reportTemplateToUpdate.setStyles(reportTemplate.getStyles());
+            reportTemplateToUpdate.setParameters(reportTemplate.getParameters());
             reportRepository.save(reportTemplateToUpdate);
             log.info("Report updated successfully with report name: {}", reportTemplate.getReportName());
         } else {
@@ -56,6 +59,13 @@ public class ReportService {
             log.info("Report created successfully with report name: {}", reportTemplate.getReportName());
         }
     }
+
+    public String getParameters(String reportName) {
+        ReportTemplate reportTemplate = findByReportName(reportName);
+        return reportTemplate.getParameters();
+    }
+
+
 
     public List<String> findAllReportName() {
         List<String> reportsName = new ArrayList<>();
@@ -67,13 +77,13 @@ public class ReportService {
         return reportsName;
     }
 
-    public Map<?,?> getDataByReportName(String reportName) {
+    public Map<?,?> getDataByReportName(String reportName, Map<String, String> parameters) {
         ReportTemplate reportTemplate = findByReportName(reportName);
-        return getDataForReport(reportTemplate);
+        return getDataForReport(reportTemplate, parameters);
     }
 
 
-    public Map<?,?> getDataForReport(ReportTemplate reportTemplate) {
+    public Map<?,?> getDataForReport(ReportTemplate reportTemplate, Map<String, String> parameters) {
         try {
 
             DataSourceConfig config = new DataSourceConfig(reportTemplate.getDbUrl(), reportTemplate.getDbUsername(),
@@ -87,7 +97,7 @@ public class ReportService {
                 String tableName = entry.getKey();
                 String sql = entry.getValue();
 
-                List<Map<String, Object>> rows = dataSourceService.executeQuery(sql, config);
+                List<Map<String, Object>> rows = dataSourceService.executeQuery(sql, config, parameters);
 
                 Map<String, Object> tableBlock = new HashMap<>();
                 tableBlock.put("tableName", tableName);

@@ -2,7 +2,7 @@ SELECT * FROM BD_USR;
 SELECT * FROM BD_PLAN;
 SELECT * FROM BD_REPORT;
 
-Drop table BD_REPORT;
+-- Drop table BD_REPORT;
 
 
 create table BD_USR(
@@ -27,6 +27,8 @@ create table BD_REPORT(
                           DB_DRIVER varchar,
                           SQL varchar,
                           CONTENT varchar,
-                          STYLES varchar
+                          STYLES varchar,
+                          PARAMETERS VARCHAR
 
 );
+

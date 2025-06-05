@@ -33,23 +33,7 @@ public class TestController {
 
     @GetMapping("/1")
     public ResponseEntity<?> test1() {
-
-        DataSourceConfig config = new DataSourceConfig();
-        config.setUrl("jdbc:postgresql://localhost:5432/automation_production");
-        config.setUsername("postgres");
-        config.setPassword("1111");
-        config.setDriverClassName("org.postgresql.Driver");
-
-        String sql = "SELECT DATA AS Data2 FROM BD_PLAN";
-
-
-        List<Map<String, Object>> result = dataSourceService.executeQuery(sql, config);
-
-        for (Map<String, Object> row : result) {
-            System.out.println(row);
-        }
-
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok("");
     }
 
 

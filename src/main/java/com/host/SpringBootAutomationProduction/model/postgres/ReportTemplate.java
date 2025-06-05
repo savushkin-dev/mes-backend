@@ -4,6 +4,8 @@ package com.host.SpringBootAutomationProduction.model.postgres;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -44,5 +46,8 @@ public class ReportTemplate {
 
     @Column(name = "STYLES")
     private String styles;
+
+    @Column(name = "PARAMETERS")
+    private String parameters;
 
 }
