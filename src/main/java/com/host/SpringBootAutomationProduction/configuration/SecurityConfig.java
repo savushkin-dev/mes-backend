@@ -57,6 +57,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "api/report/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "api/report/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "test/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "api/pdf/**").permitAll()
                                 .anyRequest().authenticated()
                 )
 

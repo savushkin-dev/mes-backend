@@ -58,19 +58,71 @@ public class DataSourceService {
         }
     }
 
+//    public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config,
+//                                                  Map<String, String> parameters) {
+//        try {
+//            DataSource dataSource = createDataSource(config);
+//            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+//
+//            String sqlPrepared = sql.replaceAll(":\\w+", "?");
+//            return jdbcTemplate.query(sqlPrepared, new PreparedStatementSetter() {
+//                @Override
+//                public void setValues(PreparedStatement ps) throws SQLException {
+//                    // Преобразуем именованные параметры (:param) в позиционные (?)
+//                    Pattern pattern = Pattern.compile(":\\w+");
+//                    Matcher matcher = pattern.matcher(sql);
+//                    int index = 1;
+//
+//                    while (matcher.find()) {
+//                        String paramName = matcher.group().substring(1);
+//                        String value = parameters.get(paramName);
+//
+//
+//                        if (value == null) {
+//                            ps.setNull(index, Types.NULL);
+//                        } else if (isDate(value)) {
+//                            ps.setDate(index, java.sql.Date.valueOf(value));
+//                        } else if (isNumeric(value)) {
+//                            ps.setBigDecimal(index, new BigDecimal(value));
+//                        } else if (isBoolean(value)) {
+//                            ps.setBoolean(index, Boolean.parseBoolean(value));
+//                        } else {
+//                            ps.setString(index, value);
+//                        }
+//                        index++;
+//                    }
+//                }
+//            }, new ColumnMapRowMapper());
+//        } catch (Exception e) {
+//            log.error("Error executing query: {}, parameters: {}, config: {}", sql, parameters, config);
+//            throw new DataSourceNotRequestedException(e.getMessage());
+//        }
+//    }
+
     public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config,
                                                   Map<String, String> parameters) {
         try {
             DataSource dataSource = createDataSource(config);
             JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlPrepared = sql.replaceAll(":\\w+", "?");
+
+            String[] parts = sql.split("(?i)ORDER BY");
+            String mainSql = parts[0].trim();
+            String orderByClause = parts.length > 1 ? parts[1] : null;
+
+            if (orderByClause != null) {
+                orderByClause = replaceSortParameters(orderByClause, parameters);
+            }
+
+            String finalSql = orderByClause != null ? mainSql + " ORDER BY " + orderByClause : mainSql;
+
+            String sqlPrepared = finalSql.replaceAll(":\\w+", "?");
             return jdbcTemplate.query(sqlPrepared, new PreparedStatementSetter() {
                 @Override
                 public void setValues(PreparedStatement ps) throws SQLException {
-                    // Преобразуем именованные параметры (:param) в позиционные (?)
+
                     Pattern pattern = Pattern.compile(":\\w+");
-                    Matcher matcher = pattern.matcher(sql);
+                    Matcher matcher = pattern.matcher(finalSql);
                     int index = 1;
 
                     while (matcher.find()) {
@@ -97,6 +149,27 @@ public class DataSourceService {
             log.error("Error executing query: {}, parameters: {}, config: {}", sql, parameters, config);
             throw new DataSourceNotRequestedException(e.getMessage());
         }
+    }
+
+    private String replaceSortParameters(String orderByClause, Map<String, String> parameters) {
+
+        Pattern pattern = Pattern.compile(":(\\w+)");
+        Matcher matcher = pattern.matcher(orderByClause);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String paramName = matcher.group(1);
+            String value = parameters.get(paramName);
+
+            if (value != null) {
+                String escapedValue = value.replace("'", "''");
+                matcher.appendReplacement(result, escapedValue);
+            } else {
+                matcher.appendReplacement(result, matcher.group());
+            }
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 
 
