@@ -1,12 +1,15 @@
 package com.host.SpringBootAutomationProduction.controller;
 
 import com.host.SpringBootAutomationProduction.dto.PageDataDTO;
+import com.host.SpringBootAutomationProduction.service.PdfService;
 import com.lowagie.text.pdf.BaseFont;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,9 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,73 +38,21 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 @RequestMapping("/api/pdf")
 public class PdfController {
 
+    private final PdfService pdfService;
+
+    @Autowired
+    public PdfController(PdfService pdfService) {
+        this.pdfService = pdfService;
+    }
 
     @PostMapping("/generate")
     public ResponseEntity<byte[]> generatePdf(@RequestBody List<PageDataDTO> pages) {
-        try {
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-            String html = """
-                    <!DOCTYPE html>
-                    <html lang="ru">
-                    <head>
-                        <meta charset="UTF-8" />
-                        <style>
-                       
-                            @page { margin: 0; }
-                            body, html {
-                                font-family: Arial, 'Times New Roman', sans-serif;
-                                margin: 0;
-                                padding: 0;
-                                left: 0;
-                                right: 0;
-                            }
-                            .page-container {
-                                 page-break-after: always;
-                                 height: 100vh;
-                                 overflow: hidden;
-                                 margin: 0;
-                                 padding: 0;
-                                 left: 0;
-                                 right: 0;
-                            }
-                            %s
-                        </style>
-                    </head>
-                    <body>
-                          
-                        %s
-                    </body>
-                    </html>
-                    """.formatted(
-                    pages.get(0).getStyles(),
-                    pages.stream()
-                            .map(page -> "<div class='page-container'>" + page.getContent() + "</div>")
-                            .collect(Collectors.joining())
-            );
-
-
-            PdfRendererBuilder builder = new PdfRendererBuilder();
-//            builder.useFont(() -> getClass().getResourceAsStream("c:/windows/fonts/times.ttf"), "Times New Roman");
-//            builder.useFont(() -> getClass().getResourceAsStream("c:/windows/fonts/arial.ttf"), "Arial");
-            builder.useFont(new File("c:/windows/fonts/arial.ttf"), "Arial");
-            builder.useFont(new File("c:/windows/fonts/times.ttf"), "Times New Roman");
-            builder.withHtmlContent(html, "/");
-            builder.toStream(os);
-            builder.run();
-
             return ResponseEntity.ok()
                     .header("Content-Type", "application/pdf")
-                    .body(os.toByteArray());
-
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка генерации PDF: " + e.getMessage(), e);
-        }
+                    .body(pdfService.createPdf(pages));
     }
 
     //1 Посмотреть рендер на фронте, скорее всего придется переносить на бэк
-    //2 Генерацию pdf нужно доработать (шрифты добавить, линия чтобы была до конца горизонтальная)
-    // ----  3 Попробовать сделать печать из pdf который приходит с сервера
 
 
     @PostMapping("/generate2")

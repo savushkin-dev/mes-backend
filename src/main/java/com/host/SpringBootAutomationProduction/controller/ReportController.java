@@ -4,9 +4,7 @@ package com.host.SpringBootAutomationProduction.controller;
 import com.host.SpringBootAutomationProduction.dto.ParametersDTO;
 import com.host.SpringBootAutomationProduction.dto.ReportTemplateParametersDTO;
 import com.host.SpringBootAutomationProduction.dto.ReportTemplateDTO;
-import com.host.SpringBootAutomationProduction.model.LuMove;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
-import com.host.SpringBootAutomationProduction.service.LuMoveService;
 import com.host.SpringBootAutomationProduction.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -15,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -26,13 +22,11 @@ import java.util.Map;
 public class ReportController {
 
     private final ReportService reportService;
-    private final LuMoveService luMoveService;
 
 
     @Autowired
-    public ReportController(ReportService reportService, LuMoveService luMoveService) {
+    public ReportController(ReportService reportService) {
         this.reportService = reportService;
-        this.luMoveService = luMoveService;
     }
 
 
@@ -87,12 +81,6 @@ public class ReportController {
 
     private ReportTemplateDTO convertToReportTemplateDTO(ReportTemplate reportTemplate) {
         return new ModelMapper().map(reportTemplate, ReportTemplateDTO.class);
-    }
-
-    @GetMapping("/lumoveday")
-    public ResponseEntity<?> getLuMoveDay(){
-        List<LuMove> luMoveList = luMoveService.getLuMoveDay();
-        return ResponseEntity.ok(luMoveList);
     }
 
 

@@ -174,9 +174,22 @@
 			</plugin>
 		</plugins>
 		<resources>
+			<!-- Основные ресурсы (фильтрация включена, но шрифты исключены) -->
 			<resource>
 				<directory>src/main/resources</directory>
-				<filtering>true</filtering>  <!-- Включаем подстановку переменных -->
+				<filtering>true</filtering>
+				<excludes>
+					<exclude>fonts/**</exclude>  <!-- Исключаем фильтрацию для всей папки fonts т.к. это бинарные файлы -->
+				</excludes>
+			</resource>
+
+			<!-- Отдельно подключаем папку fonts БЕЗ фильтрации -->
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<includes>
+					<include>fonts/**</include>  <!-- Включаем только fonts -->
+				</includes>
 			</resource>
 		</resources>
 	</build>

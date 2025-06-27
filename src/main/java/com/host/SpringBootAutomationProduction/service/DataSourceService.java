@@ -36,17 +36,6 @@ public class DataSourceService {
         return dataSource;
     }
 
-//    public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config) {
-//        try {
-//            DataSource dataSource = createDataSource(config);
-//            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-//            return jdbcTemplate.queryForList(sql);
-//        } catch (Exception e) {
-//            log.error("Error executing query: {}, config: {}", sql, config);
-//            throw new DataSourceNotRequestedException(e.getMessage());
-//        }
-//    }
-
     public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config) {
         try {
             DataSource dataSource = createDataSource(config);
@@ -57,47 +46,6 @@ public class DataSourceService {
             throw new DataSourceNotRequestedException(e.getMessage());
         }
     }
-
-//    public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config,
-//                                                  Map<String, String> parameters) {
-//        try {
-//            DataSource dataSource = createDataSource(config);
-//            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-//
-//            String sqlPrepared = sql.replaceAll(":\\w+", "?");
-//            return jdbcTemplate.query(sqlPrepared, new PreparedStatementSetter() {
-//                @Override
-//                public void setValues(PreparedStatement ps) throws SQLException {
-//                    // Преобразуем именованные параметры (:param) в позиционные (?)
-//                    Pattern pattern = Pattern.compile(":\\w+");
-//                    Matcher matcher = pattern.matcher(sql);
-//                    int index = 1;
-//
-//                    while (matcher.find()) {
-//                        String paramName = matcher.group().substring(1);
-//                        String value = parameters.get(paramName);
-//
-//
-//                        if (value == null) {
-//                            ps.setNull(index, Types.NULL);
-//                        } else if (isDate(value)) {
-//                            ps.setDate(index, java.sql.Date.valueOf(value));
-//                        } else if (isNumeric(value)) {
-//                            ps.setBigDecimal(index, new BigDecimal(value));
-//                        } else if (isBoolean(value)) {
-//                            ps.setBoolean(index, Boolean.parseBoolean(value));
-//                        } else {
-//                            ps.setString(index, value);
-//                        }
-//                        index++;
-//                    }
-//                }
-//            }, new ColumnMapRowMapper());
-//        } catch (Exception e) {
-//            log.error("Error executing query: {}, parameters: {}, config: {}", sql, parameters, config);
-//            throw new DataSourceNotRequestedException(e.getMessage());
-//        }
-//    }
 
     public List<Map<String, Object>> executeQuery(String sql, DataSourceConfig config,
                                                   Map<String, String> parameters) {
@@ -116,12 +64,12 @@ public class DataSourceService {
 
             String finalSql = orderByClause != null ? mainSql + " ORDER BY " + orderByClause : mainSql;
 
-            String sqlPrepared = finalSql.replaceAll(":\\w+", "?");
+            String sqlPrepared = finalSql.replaceAll("(?<=\\s|^):(\\w+)(?=\\s|$)", "?");
             return jdbcTemplate.query(sqlPrepared, new PreparedStatementSetter() {
                 @Override
                 public void setValues(PreparedStatement ps) throws SQLException {
 
-                    Pattern pattern = Pattern.compile(":\\w+");
+                    Pattern pattern = Pattern.compile("(?<=\\s|^):(\\w+)(?=\\s|$)");
                     Matcher matcher = pattern.matcher(finalSql);
                     int index = 1;
 
@@ -133,6 +81,7 @@ public class DataSourceService {
                         if (value == null) {
                             ps.setNull(index, Types.NULL);
                         } else if (isDate(value)) {
+                            System.out.println(java.sql.Date.valueOf(value));
                             ps.setDate(index, java.sql.Date.valueOf(value));
                         } else if (isNumeric(value)) {
                             ps.setBigDecimal(index, new BigDecimal(value));
