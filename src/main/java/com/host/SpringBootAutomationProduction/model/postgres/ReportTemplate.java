@@ -50,4 +50,10 @@ public class ReportTemplate {
     @Column(name = "PARAMETERS")
     private String parameters;
 
+    @Column(name = "SCRIPT")
+    private String script;
+
+    @Column(name = "IS_SQL")
+    private boolean sqlMode;
+
 }

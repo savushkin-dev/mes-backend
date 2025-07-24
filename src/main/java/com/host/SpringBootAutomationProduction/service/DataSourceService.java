@@ -81,7 +81,6 @@ public class DataSourceService {
                         if (value == null) {
                             ps.setNull(index, Types.NULL);
                         } else if (isDate(value)) {
-                            System.out.println(java.sql.Date.valueOf(value));
                             ps.setDate(index, java.sql.Date.valueOf(value));
                         } else if (isNumeric(value)) {
                             ps.setBigDecimal(index, new BigDecimal(value));

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <springProperty name="LOGS" source="logging.access.path" defaultValue="logs/access"/>
+<!--    <property name="LOGS" value="/Users/punko/Desktop/AutomationProduction/logs" />-->
+
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.access.PatternLayoutEncoder">
+            <pattern>%h %l %u [%t] "%r" %s %b "%i{Referer}" "%i{User-Agent}" %I</pattern>
+        </encoder>
+    </appender>
+
+
+    <appender name="TomcatFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS}/logger-Tomcat.log</file>
+
+        <encoder class="ch.qos.logback.access.PatternLayoutEncoder">
+            <Pattern>%h %l %u [%t] "%r" %s %b "%i{Referer}" "%i{User-Agent}" %I</Pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS}/archived/logger-Tomcat.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+
+
+    </appender>
+<!--    <appender-ref ref="Console"/>-->
+    <appender-ref ref="TomcatFile"/>
+</configuration>
