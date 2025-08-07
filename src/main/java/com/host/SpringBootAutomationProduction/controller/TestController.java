@@ -3,6 +3,7 @@ package com.host.SpringBootAutomationProduction.controller;
 import com.host.SpringBootAutomationProduction.service.DataSourceService;
 import com.host.SpringBootAutomationProduction.service.ExecutorScriptService;
 import com.host.SpringBootAutomationProduction.service.TestService;
+import com.host.SpringBootAutomationProduction.util.LocalDBScriptJava;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,32 +38,11 @@ public class TestController {
         return ResponseEntity.ok("");
     }
 
-    @GetMapping("/comp1")
+    @GetMapping("/2")
     public ResponseEntity<?> test() {
 
-        Map<String, String> params = new HashMap<>();
-        params.put("name", "John");
-        params.put("age", "30");
-        // 1. Простейший пример (без параметров)
-        try {
-            String helloWorldCode =
-                    "import java.util.*; \n" +
-                    "public class DynamicScript {\n" +
-                            "  public static String execute(Map<String, String> params) {\n" +
-                            "    return \"Hello, \" + params.get(\"name\") + \"! Age: \" + params.get(\"age\");\n" +
-                            "  }\n" +
-                            "}";
 
-            Object result = executorScriptService.executeScript(helloWorldCode, params);
-            System.out.println(result); // Выведет: Hello from dynamic script!
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-
-        return ResponseEntity.ok("");
+        return ResponseEntity.ok(LocalDBScriptJava.main(new HashMap<>()));
     }
 
     @GetMapping("/comp2")

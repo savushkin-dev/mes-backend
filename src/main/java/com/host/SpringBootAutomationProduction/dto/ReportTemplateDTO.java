@@ -26,6 +26,7 @@ public class ReportTemplateDTO {
     private String parameters;
     private String script;
     private boolean sqlMode;
+    private String dataBands;
 
     public ReportTemplateDTO encrypt() {
         setDbPassword(Encryption.encrypt(getDbPassword()));

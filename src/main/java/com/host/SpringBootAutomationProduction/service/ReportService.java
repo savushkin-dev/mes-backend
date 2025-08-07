@@ -57,6 +57,7 @@ public class ReportService {
             reportTemplateToUpdate.setParameters(reportTemplate.getParameters());
             reportTemplateToUpdate.setScript(reportTemplate.getScript());
             reportTemplateToUpdate.setSqlMode(reportTemplate.isSqlMode());
+            reportTemplateToUpdate.setDataBands(reportTemplate.getDataBands());
             reportRepository.save(reportTemplateToUpdate);
             log.info("Report updated successfully with report name: {}", reportTemplate.getReportName());
         } else {

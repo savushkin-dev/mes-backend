@@ -56,4 +56,7 @@ public class ReportTemplate {
     @Column(name = "IS_SQL")
     private boolean sqlMode;
 
+    @Column(name = "DATA_BANDS")
+    private String dataBands;
+
 }
