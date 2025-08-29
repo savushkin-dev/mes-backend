@@ -59,4 +59,7 @@ public class ReportTemplate {
     @Column(name = "DATA_BANDS")
     private String dataBands;
 
+    @Column(name = "IS_BOOK_ORIENTATION")
+    private boolean bookOrientation;
+
 }

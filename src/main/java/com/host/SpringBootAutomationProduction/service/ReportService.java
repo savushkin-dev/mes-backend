@@ -58,6 +58,7 @@ public class ReportService {
             reportTemplateToUpdate.setScript(reportTemplate.getScript());
             reportTemplateToUpdate.setSqlMode(reportTemplate.isSqlMode());
             reportTemplateToUpdate.setDataBands(reportTemplate.getDataBands());
+            reportTemplateToUpdate.setBookOrientation(reportTemplate.isBookOrientation());
             reportRepository.save(reportTemplateToUpdate);
             log.info("Report updated successfully with report name: {}", reportTemplate.getReportName());
         } else {
@@ -109,6 +110,8 @@ public class ReportService {
                 List<Map<String, Object>> rows = dataSourceService.executeQuery(sql, config, parameters);
                 reportUtil.addData(rows, tableName);
             }
+
+            reportUtil.addVar(new HashMap<String,Object>());
 
             return reportUtil.getResult();
         } catch (Exception e){

@@ -64,12 +64,12 @@ public class DataSourceService {
 
             String finalSql = orderByClause != null ? mainSql + " ORDER BY " + orderByClause : mainSql;
 
-            String sqlPrepared = finalSql.replaceAll("(?<=\\s|^):(\\w+)(?=\\s|$)", "?");
+            String sqlPrepared = finalSql.replaceAll("@\\w+", "?");
             return jdbcTemplate.query(sqlPrepared, new PreparedStatementSetter() {
                 @Override
                 public void setValues(PreparedStatement ps) throws SQLException {
 
-                    Pattern pattern = Pattern.compile("(?<=\\s|^):(\\w+)(?=\\s|$)");
+                    Pattern pattern = Pattern.compile("@\\w+");
                     Matcher matcher = pattern.matcher(finalSql);
                     int index = 1;
 
@@ -101,7 +101,7 @@ public class DataSourceService {
 
     private String replaceSortParameters(String orderByClause, Map<String, String> parameters) {
 
-        Pattern pattern = Pattern.compile(":(\\w+)");
+        Pattern pattern = Pattern.compile("@(\\w+)");
         Matcher matcher = pattern.matcher(orderByClause);
         StringBuffer result = new StringBuffer();
 
