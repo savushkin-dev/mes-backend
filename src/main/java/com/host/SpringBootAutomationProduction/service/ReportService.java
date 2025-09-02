@@ -5,6 +5,7 @@ import com.host.SpringBootAutomationProduction.exceptions.ReportTemplateNotFound
 import com.host.SpringBootAutomationProduction.model.DataSourceConfig;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
 import com.host.SpringBootAutomationProduction.repositories.postgres.ReportRepository;
+import com.host.SpringBootAutomationProduction.util.ReportUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,12 +22,14 @@ public class ReportService {
 
     private final DataSourceService dataSourceService;
 
-
+    private final ExecutorScriptService executorScriptService;
+    
 
     @Autowired
-    public ReportService(ReportRepository reportRepository, DataSourceService dataSourceService) {
+    public ReportService(ReportRepository reportRepository, DataSourceService dataSourceService, ExecutorScriptService executorScriptService) {
         this.reportRepository = reportRepository;
         this.dataSourceService = dataSourceService;
+        this.executorScriptService = executorScriptService;
     }
 
 
@@ -52,6 +55,10 @@ public class ReportService {
             reportTemplateToUpdate.setContent(reportTemplate.getContent());
             reportTemplateToUpdate.setStyles(reportTemplate.getStyles());
             reportTemplateToUpdate.setParameters(reportTemplate.getParameters());
+            reportTemplateToUpdate.setScript(reportTemplate.getScript());
+            reportTemplateToUpdate.setSqlMode(reportTemplate.isSqlMode());
+            reportTemplateToUpdate.setDataBands(reportTemplate.getDataBands());
+            reportTemplateToUpdate.setBookOrientation(reportTemplate.isBookOrientation());
             reportRepository.save(reportTemplateToUpdate);
             log.info("Report updated successfully with report name: {}", reportTemplate.getReportName());
         } else {
@@ -86,40 +93,37 @@ public class ReportService {
     public Map<?,?> getDataForReport(ReportTemplate reportTemplate, Map<String, String> parameters) {
         try {
 
+            if(!reportTemplate.isSqlMode()){
+                return getDataByScript(reportTemplate, parameters);
+            }
+
+            ReportUtil reportUtil = new ReportUtil();
+
             DataSourceConfig config = new DataSourceConfig(reportTemplate.getDbUrl(), reportTemplate.getDbUsername(),
                     reportTemplate.getDbPassword(), reportTemplate.getDbDriver());
-
-            List<Map<String, Object>> tableData = new ArrayList<>();
 
             Map<String, String> sqlQueries = dataSourceService.splitSqlByTableName(reportTemplate.getSql());
 
             for (Map.Entry<String, String> entry : sqlQueries.entrySet()) {
                 String tableName = entry.getKey();
                 String sql = entry.getValue();
-
                 List<Map<String, Object>> rows = dataSourceService.executeQuery(sql, config, parameters);
-
-                Map<String, Object> tableBlock = new HashMap<>();
-                tableBlock.put("tableName", tableName);
-                tableBlock.put("data", rows);
-
-                tableData.add(tableBlock);
+                reportUtil.addData(rows, tableName);
             }
 
+            reportUtil.addVar(new HashMap<String,Object>());
 
-            // Преобразуем globalVars из Map<String, String> в List<Map<String, String>> как в dataReportTest
-            List<Map<String, String>> globalVarList = new ArrayList<>();
-
-            Map<String, Object> reportResult = new HashMap<>();
-            reportResult.put("globalVar", globalVarList);
-            reportResult.put("tableData", tableData);
-
-            return reportResult;
+            return reportUtil.getResult();
         } catch (Exception e){
             log.error("Error generating data for report: {}", reportTemplate);
             throw e;
         }
 
+    }
+
+    public Map<?,?> getDataByScript(ReportTemplate reportTemplate, Map<String, String> parameters) {
+        Map<?,?> result = (Map<?, ?>) executorScriptService.executeScript(reportTemplate.getScript(), parameters);
+        return result;
     }
 
     public List<Map<String, Object>> getReportsNameGroupedByCategory() {

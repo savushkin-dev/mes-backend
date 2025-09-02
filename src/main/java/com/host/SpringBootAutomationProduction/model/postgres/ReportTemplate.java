@@ -50,4 +50,16 @@ public class ReportTemplate {
     @Column(name = "PARAMETERS")
     private String parameters;
 
+    @Column(name = "SCRIPT")
+    private String script;
+
+    @Column(name = "IS_SQL")
+    private boolean sqlMode;
+
+    @Column(name = "DATA_BANDS")
+    private String dataBands;
+
+    @Column(name = "IS_BOOK_ORIENTATION")
+    private boolean bookOrientation;
+
 }

@@ -5,10 +5,12 @@ import com.host.SpringBootAutomationProduction.dto.LoginRequestDTO;
 import com.host.SpringBootAutomationProduction.dto.LoginResponseDTO;
 import com.host.SpringBootAutomationProduction.dto.UserDTO;
 import com.host.SpringBootAutomationProduction.exceptions.UserNotCreatedException;
+import com.host.SpringBootAutomationProduction.exceptions.UserNotFoundException;
 import com.host.SpringBootAutomationProduction.model.postgres.User;
 import com.host.SpringBootAutomationProduction.security.JWTUtil;
 import com.host.SpringBootAutomationProduction.service.PersonDetailsService;
 import com.host.SpringBootAutomationProduction.service.RegistrationService;
+import com.host.SpringBootAutomationProduction.service.UserService;
 import com.host.SpringBootAutomationProduction.util.UserValidator;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/authentication")
@@ -33,19 +36,26 @@ public class AuthenticationController {
     private final RegistrationService registrationService;
     private final JWTUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final UserService userService;
 
     @Autowired
-    public AuthenticationController(UserValidator userValidator, RegistrationService registrationService, JWTUtil jwtUtil, AuthenticationManager authenticationManager, PersonDetailsService personDetailsService) {
+    public AuthenticationController(UserValidator userValidator, RegistrationService registrationService, JWTUtil jwtUtil, AuthenticationManager authenticationManager, PersonDetailsService personDetailsService, UserService userService) {
         this.userValidator = userValidator;
         this.registrationService = registrationService;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
+        this.userService = userService;
     }
 
 
     @PostMapping("/authenticate")
     public ResponseEntity<LoginResponseDTO> performAuthentication(@RequestBody LoginRequestDTO loginRequestDto) {
 
+
+        Optional<User> optionalUser = userService.findByUsername(loginRequestDto.getUsername());
+        if(optionalUser.isEmpty()) {
+            throw new UserNotFoundException();
+        }
 
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(),

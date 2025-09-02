@@ -12,7 +12,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@ToString
 public class ReportTemplateDTO {
 
     private String reportName;
@@ -25,6 +24,10 @@ public class ReportTemplateDTO {
     private String content;
     private String styles;
     private String parameters;
+    private String script;
+    private boolean sqlMode;
+    private String dataBands;
+    private boolean bookOrientation;
 
     public ReportTemplateDTO encrypt() {
         setDbPassword(Encryption.encrypt(getDbPassword()));
@@ -36,4 +39,18 @@ public class ReportTemplateDTO {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "ReportTemplateDTO{" +
+                "sqlMode=" + sqlMode +
+                ", parameters='" + parameters + '\'' +
+                ", sql='" + sql + '\'' +
+                ", dbDriver='" + dbDriver + '\'' +
+                ", dbPassword='" + dbPassword + '\'' +
+                ", dbUsername='" + dbUsername + '\'' +
+                ", dbUrl='" + dbUrl + '\'' +
+                ", reportCategory='" + reportCategory + '\'' +
+                ", reportName='" + reportName + '\'' +
+                '}';
+    }
 }
