@@ -12,6 +12,11 @@ public class ReportUtil { //Вспомогательный класс для ф�
 
     Map<String, Object> result = new HashMap<>();
 
+    public ReportUtil() {
+        result.put("globalVar", new HashMap<String, Object>());
+        result.put("tableData", new ArrayList<Map<String, Object>>());
+    }
+
 
     public void addData(List<Map<String, Object>> rows, String bandName){
         List<Map<String, Object>> tableData = new ArrayList<>();
@@ -22,10 +27,10 @@ public class ReportUtil { //Вспомогательный класс для ф�
         result.put("tableData", tableData);
     }
 
-    public void addVar(List<Map<String, Object>> rows, String bandName){
-        List<Map<String, String>> globalVarList = new ArrayList<>();
-        result.put("globalVar", globalVarList);
+    public void addVar(Map<String, Object> rows){
+        result.put("globalVar", rows);
     }
+
 
 
 }

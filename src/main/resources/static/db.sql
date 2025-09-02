@@ -28,7 +28,12 @@ create table BD_REPORT(
                           SQL varchar,
                           CONTENT varchar,
                           STYLES varchar,
-                          PARAMETERS VARCHAR
+                          PARAMETERS VARCHAR,
+                          SCRIPT VARCHAR,
+                          IS_SQL boolean,
+                          DATA_BANDS varchar,
+                          IS_BOOK_ORIENTATION boolean
+
 
 );
 
