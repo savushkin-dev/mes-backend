@@ -50,13 +50,6 @@ public class AuthenticationController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<LoginResponseDTO> performAuthentication(@RequestBody LoginRequestDTO loginRequestDto) {
-
-
-        Optional<User> optionalUser = userService.findByUsername(loginRequestDto.getUsername());
-        if(optionalUser.isEmpty()) {
-            throw new UserNotFoundException();
-        }
-
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(),
                         loginRequestDto.getPassword());
