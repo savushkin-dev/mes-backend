@@ -1,7 +1,7 @@
 package com.host.SpringBootAutomationProduction.configuration;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.host.SpringBootAutomationProduction.repositories.postgres.UsersRepository;
+import com.host.SpringBootAutomationProduction.exceptions.UserNotFoundException;
 import com.host.SpringBootAutomationProduction.security.JWTUtil;
 import com.host.SpringBootAutomationProduction.service.PersonDetailsService;
 import jakarta.servlet.FilterChain;
@@ -13,6 +13,7 @@ import org.springframework.security.authentication.InsufficientAuthenticationExc
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -27,14 +28,12 @@ public class JWTFilter extends OncePerRequestFilter {
 
     private final PersonDetailsService personDetailsService;
 
-    private final UsersRepository usersRepository;
 
     @Autowired
-    public JWTFilter(AuthenticationEntryPoint authenticationEntryPoint, JWTUtil jwtUtil, PersonDetailsService personDetailsService, UsersRepository usersRepository) {
+    public JWTFilter(AuthenticationEntryPoint authenticationEntryPoint, JWTUtil jwtUtil, PersonDetailsService personDetailsService) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.jwtUtil = jwtUtil;
         this.personDetailsService = personDetailsService;
-        this.usersRepository = usersRepository;
     }
 
 
@@ -44,37 +43,47 @@ public class JWTFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && !authHeader.isBlank()) {
-            String jwt = authHeader;
-
-            if(authHeader.startsWith("Bearer ")){
-                jwt = authHeader.substring(7);
-            }
+            String jwt = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
 
             if (jwt.isBlank()) {
-                response.setHeader("error","Invalid JWT Token in Bearer Header");
-                response.sendError(response.SC_BAD_REQUEST);
-            } else {
-                try {
-                    String username = jwtUtil.validateTokenAndRetrieveClaim(jwt);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JWT Token");
+                return;
+            }
 
-                    UserDetails userDetails = personDetailsService.loadUserByUsername(username);
+            try {
+                String username = jwtUtil.validateTokenAndRetrieveClaim(jwt);
+                String authType = jwtUtil.extractAuthType(jwt); // ← Получаем тип аутентификации
 
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
+                UserDetails userDetails = personDetailsService.loadUserByUsername(username);
 
-
-                    if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
-
-
-                    }
-
-
-                } catch (JWTVerificationException e) {
-                    response.setHeader("error","Invalid JWT Token");
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                //проверяем соответствие типа аутентификации
+                if (userDetails.getPassword() == null && !"NTLM".equals(authType)) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid authentication type");
+                    return;
                 }
 
+                if (userDetails.getPassword() != null && !"STANDARD".equals(authType)) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid authentication type");
+                    return;
+                }
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                userDetails.getPassword(), // credentials всегда null для JWT
+                                userDetails.getAuthorities()
+                        );
+
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            } catch (JWTVerificationException e) {
+                response.setHeader("error","Invalid JWT Token");
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            } catch (UsernameNotFoundException e) {
+                response.setHeader("error","User not found");
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
         }
 
