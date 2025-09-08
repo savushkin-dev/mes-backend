@@ -74,6 +74,22 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getDataForReport(reportTemplate, templateParametersDTO.getParameters()));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateReport(@RequestBody ReportTemplateDTO templateDTO) {
+        log.info("Received request patch '/id': {}", templateDTO);
+        ReportTemplate reportTemplate = convertToReportTemplate(templateDTO);
+        reportService.updateReportNameAndCategoryById(reportTemplate);
+        return ResponseEntity.ok("Report updated successfully");
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteReport(@PathVariable int id) {
+        log.info("Received request delete '/id': {}", id);
+
+//        reportService.updateReportNameAndCategoryById(reportTemplate);
+        return ResponseEntity.ok("Report updated successfully");
+    }
+
 
     private ReportTemplate convertToReportTemplate(ReportTemplateDTO reportTemplateDTO) {
         return new ModelMapper().map(reportTemplateDTO, ReportTemplate.class);
