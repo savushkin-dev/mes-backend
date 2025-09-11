@@ -11,6 +11,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,6 +53,7 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getReportsNameGroupedByCategory());
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
     @PostMapping("/create")
     public ResponseEntity<?> createOrUpdateReport(@RequestBody ReportTemplateDTO reportTemplateDTO) {
         log.info("Received request '/create': {}", reportTemplateDTO);
@@ -74,6 +76,7 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getDataForReport(reportTemplate, templateParametersDTO.getParameters()));
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateReport(@RequestBody ReportTemplateDTO templateDTO) {
         log.info("Received request patch '/id': {}", templateDTO);
@@ -82,12 +85,12 @@ public class ReportController {
         return ResponseEntity.ok("Report updated successfully");
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteReport(@PathVariable int id) {
         log.info("Received request delete '/id': {}", id);
-
-//        reportService.updateReportNameAndCategoryById(reportTemplate);
-        return ResponseEntity.ok("Report updated successfully");
+//        reportService.deleteReportById(id);
+        return ResponseEntity.ok("Report deleted successfully");
     }
 
 
