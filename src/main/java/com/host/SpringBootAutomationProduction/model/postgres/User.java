@@ -20,7 +20,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "F_ID")
-    private int F_ID;
+    private int id;
 
 
     @Column(name = "USERNAME")
@@ -45,7 +45,7 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "F_ID=" + F_ID +
+                "F_ID=" + id +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 '}';

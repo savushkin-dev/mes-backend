@@ -1,5 +1,6 @@
 package com.host.SpringBootAutomationProduction.model.postgres;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,7 +24,7 @@ public class Role {
     private String name; // ROLE_ADMIN, ROLE_USER
 
 
-    @ManyToMany(mappedBy = "roles")
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     private Set<User> users;
 
 
