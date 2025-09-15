@@ -33,13 +33,11 @@ public class ReportController {
 
     @GetMapping("/{reportName}")
     public ReportTemplateDTO getReportByName(@PathVariable("reportName") String reportName) {
-        log.info("Received request '/{reportName}': {}", reportName);
         return convertToReportTemplateDTO(reportService.findByReportName(reportName)).encrypt();
     }
 
     @GetMapping("/{reportName}/parameters")
     public ResponseEntity<?> getTemplateParameters(@PathVariable String reportName) {
-        log.info("Received request '/{templateName}/parameters': {}", reportName);
         return ResponseEntity.ok(reportService.getParameters(reportName));
     }
 
@@ -56,7 +54,6 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
     @PostMapping("/create")
     public ResponseEntity<?> createOrUpdateReport(@RequestBody ReportTemplateDTO reportTemplateDTO) {
-        log.info("Received request '/create': {}", reportTemplateDTO);
         ReportTemplate reportTemplate = convertToReportTemplate(reportTemplateDTO.decrypt());
         reportService.saveOrUpdateReport(reportTemplate);
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -65,13 +62,11 @@ public class ReportController {
     @PostMapping("/data/{reportName}")
     public ResponseEntity<?> getDataByReportName(@PathVariable("reportName") String reportName,
                                                  @RequestBody ParametersDTO parameters) {
-        log.info("Received request '/data/{reportName}': {}", reportName);
         return ResponseEntity.ok(reportService.getDataByReportName(reportName, parameters.getParameters()));
     }
 
     @PostMapping("/data")
     public ResponseEntity<?> getDataForReport(@RequestBody ReportTemplateParametersDTO templateParametersDTO) {
-        log.info("Received request '/data': {}", templateParametersDTO);
         ReportTemplate reportTemplate = convertToReportTemplate(templateParametersDTO.getReportTemplateDTO().decrypt());
         return ResponseEntity.ok(reportService.getDataForReport(reportTemplate, templateParametersDTO.getParameters()));
     }
@@ -79,7 +74,6 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateReport(@RequestBody ReportTemplateDTO templateDTO) {
-        log.info("Received request patch '/id': {}", templateDTO);
         ReportTemplate reportTemplate = convertToReportTemplate(templateDTO);
         reportService.updateReportNameAndCategoryById(reportTemplate);
         return ResponseEntity.ok("Report updated successfully");
@@ -88,8 +82,7 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteReport(@PathVariable int id) {
-        log.info("Received request delete '/id': {}", id);
-//        reportService.deleteReportById(id);
+        reportService.deleteReportById(id);
         return ResponseEntity.ok("Report deleted successfully");
     }
 
