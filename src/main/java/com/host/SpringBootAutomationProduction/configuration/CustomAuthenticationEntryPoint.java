@@ -27,27 +27,15 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         this.objectMapper = objectMapper;
     }
 
-    //filter error handling
+
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
 
         if(response.getStatus()==200)
             response.setStatus(401);
-//
-//        AppError appError = new AppError(authException.getMessage());
-//
-//        if(response.getHeader("error")!=null)
-//            appError.setMessage(response.getHeader("error"));
-//
-//        if(request.getContentType().equals("application/xml")){
-//            response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE);
-//        } else {
-//            response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-//        }
 
         response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-//        objectMapper.writeValue(response.getOutputStream(), appError);
         resolver.resolveException(request, response, null, authException);
     }
 }

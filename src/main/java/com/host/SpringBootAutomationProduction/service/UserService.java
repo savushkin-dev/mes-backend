@@ -57,17 +57,7 @@ public class UserService {
         userRepository.save(user);
         UserDTO userDTO = new UserDTO(user);
         return userDTO;
-
-
-//        return userRepository.findById(userId)
-//                .map(user -> {
-//                    user.setRoles(roleService.findByRoleNames(newRoles));
-//                    userRepository.save(user);
-//                    return new UserDTO(user);
-//                }).orElseThrow(() -> new NotFoundException("User not found"));
     }
-
-
 
     private User getUserOrgDetails() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -80,7 +70,7 @@ public class UserService {
         User user = new User();
         user.setUsername(username);
         user.setAuthType(AuthType.NTLM);
-        user.setPassword(null); // Пароль не хранится для NTLM пользователей
+        user.setPassword("-"); // Пароль не хранится для NTLM пользователей
 
         Role role = roleRepository.findByName("ROLE_VIEWER").get();
         user.setRoles(Set.of(role));

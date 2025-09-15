@@ -54,7 +54,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
             try {
                 String username = jwtUtil.validateTokenAndRetrieveClaim(jwt);
-                String authType = jwtUtil.extractAuthType(jwt); // ← Получаем тип аутентификации
+                String authType = jwtUtil.extractAuthType(jwt); // Получаем тип аутентификации
 
                 UserDetails userDetails = personDetailsService.loadUserByUsername(username);
 
