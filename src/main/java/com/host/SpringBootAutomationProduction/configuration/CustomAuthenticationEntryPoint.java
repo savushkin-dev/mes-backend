@@ -45,7 +45,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 //            response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 //        }
 
-        response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE);
+        response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 //        objectMapper.writeValue(response.getOutputStream(), appError);
         resolver.resolveException(request, response, null, authException);

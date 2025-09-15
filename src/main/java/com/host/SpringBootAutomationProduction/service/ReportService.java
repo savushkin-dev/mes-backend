@@ -67,6 +67,32 @@ public class ReportService {
         }
     }
 
+    @Transactional
+    public void updateReportNameAndCategoryById(ReportTemplate reportTemplate) {
+        Optional<ReportTemplate> reportTemplateOpt = reportRepository.findById(reportTemplate.getId());
+
+        if(reportTemplateOpt.isPresent()) {
+            ReportTemplate reportTemplateToUpdate = reportTemplateOpt.get();
+            reportTemplateToUpdate.setReportCategory(reportTemplate.getReportCategory());
+            reportTemplateToUpdate.setReportName(reportTemplate.getReportName());
+            reportRepository.save(reportTemplateToUpdate);
+            log.info("Report updated successfully with report name: {}", reportTemplate.getReportName());
+        } else {
+            throw new ReportTemplateNotFoundException("ReportTemplate not found with report name: " + reportTemplate.getReportName());
+        }
+    }
+
+    @Transactional
+    public void deleteReportById(int id) {
+        Optional<ReportTemplate> reportTemplateOpt = reportRepository.findById(id);
+        if(reportTemplateOpt.isPresent()) {
+            reportRepository.deleteById(id);
+            log.info("Report delete successfully with id: {}", id);
+        } else {
+            throw new ReportTemplateNotFoundException("ReportTemplate not found with id: " + id);
+        }
+    }
+
     public String getParameters(String reportName) {
         ReportTemplate reportTemplate = findByReportName(reportName);
         return reportTemplate.getParameters();
