@@ -3,6 +3,7 @@ package com.host.SpringBootAutomationProduction.controller;
 
 import com.host.SpringBootAutomationProduction.dto.LoginRequestDTO;
 import com.host.SpringBootAutomationProduction.dto.LoginResponseDTO;
+import com.host.SpringBootAutomationProduction.dto.RegUserDTO;
 import com.host.SpringBootAutomationProduction.dto.UserDTO;
 import com.host.SpringBootAutomationProduction.exceptions.UserNotCreatedException;
 import com.host.SpringBootAutomationProduction.exceptions.UserNotFoundException;
@@ -90,9 +91,9 @@ public class AuthenticationController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/registration")
-    public ResponseEntity<LoginResponseDTO> performRegistration(@RequestBody @Valid UserDTO userDTO,
+    public ResponseEntity<LoginResponseDTO> performRegistration(@RequestBody @Valid RegUserDTO regUserDTO,
                                                                 BindingResult bindingResult) {
-        User user = convertToPerson(userDTO);
+        User user = convertToPerson(regUserDTO);
 
         userValidator.validate(user, bindingResult);
 
@@ -116,6 +117,10 @@ public class AuthenticationController {
     }
 
     private User convertToPerson(UserDTO userDTO) {
+        return new ModelMapper().map(userDTO, User.class);
+    }
+
+    private User convertToPerson(RegUserDTO userDTO) {
         return new ModelMapper().map(userDTO, User.class);
     }
 
