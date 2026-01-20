@@ -14,6 +14,7 @@ import java.util.List;
 @Setter
 public class ReportTemplateDTO {
 
+    private int id;
     private String reportName;
     private String reportCategory;
     private String dbUrl;
