@@ -34,3 +34,7 @@ build/
 .vscode/
 
 src/main/java/com/host/SpringBootAutomationProduction/util/LocalDBScriptJava.java
+
+# Env files
+.env
+.env.local
