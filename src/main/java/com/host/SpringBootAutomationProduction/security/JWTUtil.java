@@ -15,10 +15,9 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 @Component
-@PropertySource("classpath:static/settings.ini")
 public class JWTUtil {
 
-    @Value("${jwt_secret}")
+    @Value("${jwt.secret}")
     private String secret;
 
     public String generateToken(User user) {
