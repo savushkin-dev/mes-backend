@@ -1,6 +1,7 @@
 package com.host.SpringBootAutomationProduction.service;
 
 
+import com.host.SpringBootAutomationProduction.dto.ReportParamMetaRespDTO;
 import com.host.SpringBootAutomationProduction.exceptions.ReportTemplateNotFoundException;
 import com.host.SpringBootAutomationProduction.model.DataSourceConfig;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
@@ -59,6 +60,8 @@ public class ReportService {
             reportTemplateToUpdate.setSqlMode(reportTemplate.isSqlMode());
             reportTemplateToUpdate.setDataBands(reportTemplate.getDataBands());
             reportTemplateToUpdate.setBookOrientation(reportTemplate.isBookOrientation());
+            reportTemplateToUpdate.setLayoutSettingsParams(reportTemplate.getLayoutSettingsParams());
+            reportTemplateToUpdate.setLayoutParams(reportTemplate.getLayoutParams());
             reportRepository.save(reportTemplateToUpdate);
             log.info("Report updated successfully with report name: {}", reportTemplate.getReportName());
         } else {
@@ -93,12 +96,13 @@ public class ReportService {
         }
     }
 
-    public String getParameters(String reportName) {
+    public ReportParamMetaRespDTO getParametersMeta(String reportName) {
         ReportTemplate reportTemplate = findByReportName(reportName);
-        return reportTemplate.getParameters();
+        return ReportParamMetaRespDTO.builder()
+                .parameters(reportTemplate.getParameters())
+                .layoutParams(reportTemplate.getLayoutParams())
+                .build();
     }
-
-
 
     public List<String> findAllReportName() {
         List<String> reportsName = new ArrayList<>();
