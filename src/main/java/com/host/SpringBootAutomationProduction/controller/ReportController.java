@@ -38,7 +38,7 @@ public class ReportController {
 
     @GetMapping("/{reportName}/parameters")
     public ResponseEntity<?> getTemplateParameters(@PathVariable String reportName) {
-        return ResponseEntity.ok(reportService.getParameters(reportName));
+        return ResponseEntity.ok(reportService.getParametersMeta(reportName));
     }
 
     @GetMapping("/names")
