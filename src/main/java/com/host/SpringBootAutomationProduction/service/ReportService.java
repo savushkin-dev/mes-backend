@@ -59,6 +59,8 @@ public class ReportService {
             reportTemplateToUpdate.setSqlMode(reportTemplate.isSqlMode());
             reportTemplateToUpdate.setDataBands(reportTemplate.getDataBands());
             reportTemplateToUpdate.setBookOrientation(reportTemplate.isBookOrientation());
+            reportTemplateToUpdate.setLayoutSettingsParams(reportTemplate.getLayoutSettingsParams());
+            reportTemplateToUpdate.setLayoutParams(reportTemplate.getLayoutParams());
             reportRepository.save(reportTemplateToUpdate);
             log.info("Report updated successfully with report name: {}", reportTemplate.getReportName());
         } else {

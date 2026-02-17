@@ -29,6 +29,8 @@ public class ReportTemplateDTO {
     private boolean sqlMode;
     private String dataBands;
     private boolean bookOrientation;
+    private String layoutSettingsParams;
+    private String layoutParams;
 
     public ReportTemplateDTO encrypt() {
         setDbPassword(Encryption.encrypt(getDbPassword()));
@@ -43,15 +45,23 @@ public class ReportTemplateDTO {
     @Override
     public String toString() {
         return "ReportTemplateDTO{" +
-                "sqlMode=" + sqlMode +
-                ", parameters='" + parameters + '\'' +
-                ", sql='" + sql + '\'' +
-                ", dbDriver='" + dbDriver + '\'' +
-                ", dbPassword='" + dbPassword + '\'' +
-                ", dbUsername='" + dbUsername + '\'' +
-                ", dbUrl='" + dbUrl + '\'' +
-                ", reportCategory='" + reportCategory + '\'' +
+                "id=" + id +
                 ", reportName='" + reportName + '\'' +
+                ", reportCategory='" + reportCategory + '\'' +
+                ", dbUrl='" + dbUrl + '\'' +
+                ", dbUsername='" + dbUsername + '\'' +
+                ", dbPassword='" + dbPassword + '\'' +
+                ", dbDriver='" + dbDriver + '\'' +
+                ", sql='" + sql + '\'' +
+                ", content='" + content + '\'' +
+                ", styles='" + styles + '\'' +
+                ", parameters='" + parameters + '\'' +
+                ", script='" + script + '\'' +
+                ", sqlMode=" + sqlMode +
+                ", dataBands='" + dataBands + '\'' +
+                ", bookOrientation=" + bookOrientation +
+                ", layoutSettingsParams='" + layoutSettingsParams + '\'' +
+                ", layoutParams='" + layoutParams + '\'' +
                 '}';
     }
 }
