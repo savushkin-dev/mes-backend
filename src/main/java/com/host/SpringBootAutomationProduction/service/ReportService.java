@@ -131,10 +131,9 @@ public class ReportService {
             Map<String, String> sqlQueries = dataSourceService.splitSqlByTableName(reportTemplate.getSql());
 
             for (Map.Entry<String, String> entry : sqlQueries.entrySet()) {
-                String tableName = entry.getKey();
                 String sql = entry.getValue();
                 List<Map<String, Object>> rows = dataSourceService.executeQuery(sql, config, parameters);
-                reportUtil.addData(rows, tableName);
+                reportUtil.addData(rows);
             }
 
             reportUtil.addVar(new HashMap<String,Object>());
