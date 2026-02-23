@@ -1,11 +1,9 @@
 package com.host.SpringBootAutomationProduction.model.postgres;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
+@Builder
 @Getter
 @Setter
 @AllArgsConstructor
@@ -61,5 +59,11 @@ public class ReportTemplate {
 
     @Column(name = "IS_BOOK_ORIENTATION")
     private boolean bookOrientation;
+
+    @Column(name = "LAYOUT_SETTINGS_PARAMS")
+    private String layoutSettingsParams;
+
+    @Column(name = "LAYOUT_PARAMS")
+    private String layoutParams;
 
 }

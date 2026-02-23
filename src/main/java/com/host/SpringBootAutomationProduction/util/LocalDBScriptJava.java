@@ -125,7 +125,7 @@ public class LocalDBScriptJava {
                 row.put("style", styles);
             }
 
-            reportUtil.addData(rows, "mca");
+            reportUtil.addData(rows);
 
             Map<String,Object> vars = new HashMap<>();
             vars.put("start", startTime);
@@ -257,8 +257,7 @@ public class LocalDBScriptJava {
 
         }
 
-
-        reportUtil.addData(rows, "mca"); //Просто используем методы вспомогательного класса для формирования результата
+        reportUtil.addData(rows); //Просто используем методы вспомогательного класса для формирования результата
 
         Map<String,Object> vars = new HashMap<String,Object>();
         vars.put("start", params.get("startTime"));
