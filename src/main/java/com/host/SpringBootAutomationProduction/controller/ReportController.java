@@ -97,6 +97,7 @@ public class ReportController {
     public ResponseEntity<List<ReportGlobalVarsDTO>> getGlobalVars() {
         List<ReportGlobalVarsDTO> globalVarsDTO = globalVarsService.getAllVars().stream()
                 .map(this::convertToReportGlobalVarsDTO)
+                .map(ReportGlobalVarsDTO::encrypt)  // Шифруем перед отправкой
                 .collect(Collectors.toList());
         return ResponseEntity.ok(globalVarsDTO);
     }
@@ -105,6 +106,7 @@ public class ReportController {
     @PostMapping("/globalVars")
     public ResponseEntity<?> saveGlobalVars(@RequestBody List<ReportGlobalVarsDTO> reportGlobalVarsDTO) {
         List<ReportGlobalVars> reportGlobalVars = reportGlobalVarsDTO.stream()
+                .map(ReportGlobalVarsDTO::decrypt)
                 .map(this::convertToReportGlobalVars)
                 .collect(Collectors.toList());
         globalVarsService.saveAllVars(reportGlobalVars);
