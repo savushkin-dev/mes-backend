@@ -2,9 +2,12 @@ package com.host.SpringBootAutomationProduction.controller;
 
 
 import com.host.SpringBootAutomationProduction.dto.ParametersDTO;
+import com.host.SpringBootAutomationProduction.dto.ReportGlobalVarsDTO;
 import com.host.SpringBootAutomationProduction.dto.ReportTemplateParametersDTO;
 import com.host.SpringBootAutomationProduction.dto.ReportTemplateDTO;
+import com.host.SpringBootAutomationProduction.model.postgres.ReportGlobalVars;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
+import com.host.SpringBootAutomationProduction.service.ReportGlobalVarsService;
 import com.host.SpringBootAutomationProduction.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -23,11 +27,13 @@ import java.util.Map;
 public class ReportController {
 
     private final ReportService reportService;
+    private final ReportGlobalVarsService globalVarsService;
 
 
     @Autowired
-    public ReportController(ReportService reportService) {
+    public ReportController(ReportService reportService, ReportGlobalVarsService globalVarsService) {
         this.reportService = reportService;
+        this.globalVarsService = globalVarsService;
     }
 
 
@@ -86,6 +92,25 @@ public class ReportController {
         return ResponseEntity.ok("Report deleted successfully");
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
+    @GetMapping("/globalVars")
+    public ResponseEntity<List<ReportGlobalVarsDTO>> getGlobalVars() {
+        List<ReportGlobalVarsDTO> globalVarsDTO = globalVarsService.getAllVars().stream()
+                .map(this::convertToReportGlobalVarsDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(globalVarsDTO);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
+    @PostMapping("/globalVars")
+    public ResponseEntity<?> saveGlobalVars(@RequestBody List<ReportGlobalVarsDTO> reportGlobalVarsDTO) {
+        List<ReportGlobalVars> reportGlobalVars = reportGlobalVarsDTO.stream()
+                .map(this::convertToReportGlobalVars)
+                .collect(Collectors.toList());
+        globalVarsService.saveAllVars(reportGlobalVars);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 
     private ReportTemplate convertToReportTemplate(ReportTemplateDTO reportTemplateDTO) {
         return new ModelMapper().map(reportTemplateDTO, ReportTemplate.class);
@@ -93,6 +118,14 @@ public class ReportController {
 
     private ReportTemplateDTO convertToReportTemplateDTO(ReportTemplate reportTemplate) {
         return new ModelMapper().map(reportTemplate, ReportTemplateDTO.class);
+    }
+
+    private ReportGlobalVars convertToReportGlobalVars(ReportGlobalVarsDTO reportGlobalVarsDTO) {
+        return new ModelMapper().map(reportGlobalVarsDTO, ReportGlobalVars.class);
+    }
+
+    private ReportGlobalVarsDTO convertToReportGlobalVarsDTO(ReportGlobalVars reportGlobalVars) {
+        return new ModelMapper().map(reportGlobalVars, ReportGlobalVarsDTO.class);
     }
 
 
