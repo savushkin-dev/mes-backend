@@ -34,11 +34,19 @@ public class ReportTemplateDTO {
 
     public ReportTemplateDTO encrypt() {
         setDbPassword(Encryption.encrypt(getDbPassword()));
+        setScript(Encryption.encrypt(getScript()));
+        setDbUrl(Encryption.encrypt(getDbUrl()));
+        setSql(Encryption.encrypt(getSql()));
+        setDbUsername(Encryption.encrypt(getDbUsername()));
         return this;
     }
 
     public ReportTemplateDTO decrypt() {
         setDbPassword(Encryption.decrypt(getDbPassword()));
+        setScript(Encryption.decrypt(getScript()));
+        setDbUrl(Encryption.decrypt(getDbUrl()));
+        setSql(Encryption.decrypt(getSql()));
+        setDbUsername(Encryption.decrypt(getDbUsername()));
         return this;
     }
 
