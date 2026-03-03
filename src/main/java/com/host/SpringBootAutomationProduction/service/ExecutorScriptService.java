@@ -40,16 +40,16 @@ public class ExecutorScriptService {
             Class<?> cls = compileAndLoadClass(javaCode, className);
 
             // 2. Получаем метод с сигнатурой:
-            //    `public static Object execute(Map<String, String> params)`
-            Method method = cls.getDeclaredMethod(methodName, Map.class);
+            //    `public static Object execute(Map<String, String> params, Map<String, String> globalVars)`
+            Method method = cls.getDeclaredMethod(methodName, Map.class, Map.class);
 
             // 3. Проверяем, что метод статический
             if (!Modifier.isStatic(method.getModifiers())) {
                 throw new IllegalArgumentException("Method must be static");
             }
 
-            // 4. Вызываем метод, передавая parameters
-            return method.invoke(null, parameters);
+            // 4. Вызываем метод, передавая parameters которые вводит пользователь и кэш глобальных переменных
+            return method.invoke(null, parameters, ReportGlobalVarsService.getGlobalVarsCache());
 
         } catch (Exception e) {
             log.error("Script execution failed", e);
