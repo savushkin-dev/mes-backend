@@ -1,10 +1,7 @@
 package com.host.SpringBootAutomationProduction.model.postgres;
 
-
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.List;
 
 @Builder
 @Getter

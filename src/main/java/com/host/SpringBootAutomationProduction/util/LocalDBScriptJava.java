@@ -154,7 +154,7 @@ public class LocalDBScriptJava {
         return reportUtil.getResult();
     }
 
-    public static Map<?,?> main(Map<String, String> params) {
+    public static Map<?,?> main3(Map<String, String> params) {
 
         ReportUtil reportUtil = new ReportUtil(); //Используем специальный вспомогательный имортированный класс
 
@@ -257,7 +257,6 @@ public class LocalDBScriptJava {
 
         }
 
-
         reportUtil.addData(rows); //Просто используем методы вспомогательного класса для формирования результата
 
         Map<String,Object> vars = new HashMap<String,Object>();
@@ -284,4 +283,14 @@ public class LocalDBScriptJava {
 
         return reportUtil.getResult(); //Используем метод вспомогательного класса для получения сформированного ответа
     }
+
+    public static Map<?,?> main(Map<String, String> params, Map<String, String> globalVars) {
+        System.out.println("Запуск main метода");
+        ReportUtil reportUtil = new ReportUtil(); //Используем специальный вспомогательный имортированный класс
+
+
+
+        return reportUtil.getResult(); //Используем метод вспомогательного класса для получения сформированного ответа
+    }
+
 }
