@@ -1,15 +1,14 @@
 package com.host.SpringBootAutomationProduction.service;
 
 import com.host.SpringBootAutomationProduction.model.util.StringJavaFileObject;
-
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.internal.bytebuddy.dynamic.loading.ByteArrayClassLoader;
 import org.springframework.stereotype.Service;
 
 import javax.tools.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -28,29 +27,32 @@ public class ExecutorScriptService {
     public Object executeScript(String javaCode, Map<String, String> parameters) {
         String className;
         if(findMainClassName(javaCode).isPresent()){
-            className = findMainClassName(javaCode).get(); //Определяем имя главного класса
+            className = findMainClassName(javaCode).get();
         } else {
             throw new RuntimeException("Unable to find main class name for " + javaCode);
         }
 
-        String methodName = "main"; // Универсальное имя метода
+        String methodName = "main";
 
         try {
-            // 1. Компиляция и загрузка класса
             Class<?> cls = compileAndLoadClass(javaCode, className);
 
-            // 2. Получаем метод с сигнатурой:
-            //    `public static Object execute(Map<String, String> params)`
-            Method method = cls.getDeclaredMethod(methodName, Map.class);
+            Method method = cls.getDeclaredMethod(methodName, Map.class, Map.class);
 
-            // 3. Проверяем, что метод статический
             if (!Modifier.isStatic(method.getModifiers())) {
                 throw new IllegalArgumentException("Method must be static");
             }
 
-            // 4. Вызываем метод, передавая parameters
-            return method.invoke(null, parameters);
+            return method.invoke(null, parameters, ReportGlobalVarsService.getGlobalVarsCache());
 
+        } catch (InvocationTargetException e) {
+            // Ошибка выполнения скрипта
+            Throwable cause = e.getCause();
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            cause.printStackTrace(pw);
+            log.error("Script execution error", e);
+            throw new RuntimeException("Script execution error: " + cause.getMessage() + "\n" + sw.toString());
         } catch (Exception e) {
             log.error("Script execution failed", e);
             throw new RuntimeException("Script execution error: " + e.getMessage(), e);
@@ -62,36 +64,109 @@ public class ExecutorScriptService {
         Path sourcePath = tempDir.resolve(className + ".java");
 
         try {
-            // Добавляем classpath основной программы
             String classpath = System.getProperty("java.class.path");
 
-            // Сохраняем исходный код
             Files.write(sourcePath, javaCode.getBytes());
 
-            // Компилируем с указанием classpath
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-            StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+            if (compiler == null) {
+                throw new RuntimeException("Java compiler not available. Make sure you're running with JDK.");
+            }
+
+            // Собираем диагностику компиляции
+            DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+            StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
 
             List<String> options = List.of("-classpath", classpath);
-            compiler.getTask(null, fileManager, null, options, null,
-                    fileManager.getJavaFileObjects(sourcePath)).call();
 
-            // Загружаем класс с тем же classloader, что и основной программы
+            JavaCompiler.CompilationTask task = compiler.getTask(
+                    null,
+                    fileManager,
+                    diagnostics,
+                    options,
+                    null,
+                    fileManager.getJavaFileObjects(sourcePath)
+            );
+
+            boolean success = task.call();
+            fileManager.close();
+
+            if (!success) {
+                // Форматируем ошибки компиляции
+                String errorMessage = formatCompilationErrors(diagnostics, javaCode);
+                throw new RuntimeException(errorMessage);
+            }
+
             URLClassLoader classLoader = new URLClassLoader(
                     new URL[]{tempDir.toUri().toURL()},
-                    this.getClass().getClassLoader() // Используем родительский ClassLoader
+                    this.getClass().getClassLoader()
             );
 
             return classLoader.loadClass(className);
+
         } finally {
+            cleanup(tempDir, sourcePath, className);
+        }
+    }
+
+    private String formatCompilationErrors(DiagnosticCollector<JavaFileObject> diagnostics, String javaCode) {
+        String[] lines = javaCode.split("\n");
+        StringBuilder sb = new StringBuilder();
+
+        List<Diagnostic<? extends JavaFileObject>> errors = new ArrayList<>();
+
+        // Собираем только ошибки
+        for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+            if (diagnostic.getKind() == Diagnostic.Kind.ERROR) {
+                errors.add(diagnostic);
+            }
+        }
+
+        // Сортируем по строке
+        errors.sort(Comparator.comparingLong(Diagnostic::getLineNumber));
+
+        sb.append("Compilation failed:\n\n");
+
+        for (int i = 0; i < errors.size(); i++) {
+            Diagnostic<? extends JavaFileObject> error = errors.get(i);
+            long lineNum = error.getLineNumber();
+            long colNum = error.getColumnNumber();
+
+            sb.append(String.format("Error #%d at line %d, column %d:\n", i + 1, lineNum, colNum));
+            sb.append("  Message: ").append(error.getMessage(Locale.ENGLISH)).append("\n");
+
+            // Показываем строку с ошибкой
+            if (lineNum > 0 && lineNum <= lines.length) {
+                int lineIndex = (int)lineNum - 1;
+
+                // Номер строки и код
+                sb.append(String.format("\n  %d | %s\n", lineNum, lines[lineIndex]));
+
+                // Указатель на место ошибки
+                sb.append("    ");
+                for (int j = 0; j < colNum - 1; j++) {
+                    sb.append(" ");
+                }
+                sb.append("^\n");
+            }
+
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    private void cleanup(Path tempDir, Path sourcePath, String className) {
+        try {
             Files.deleteIfExists(sourcePath);
             Files.deleteIfExists(tempDir.resolve(className + ".class"));
             Files.deleteIfExists(tempDir);
+        } catch (IOException e) {
+            log.warn("Failed to delete temporary files: {}", e.getMessage());
         }
     }
 
     public static Optional<String> findMainClassName(String javaCode) {
-        // Паттерн для поиска класса с методом main
         Pattern pattern = Pattern.compile(
                 "\\b(?:public\\s+)?class\\s+(\\w+).*?\\bpublic\\s+static\\s+void\\s+main\\s*\\(",
                 Pattern.DOTALL
@@ -102,21 +177,13 @@ public class ExecutorScriptService {
             return Optional.of(matcher.group(1));
         }
 
-        // Если не нашли main, ищем любой public класс
-        pattern = Pattern.compile(
-                "\\bpublic\\s+class\\s+(\\w+)",
-                Pattern.DOTALL
-        );
+        pattern = Pattern.compile("\\bpublic\\s+class\\s+(\\w+)", Pattern.DOTALL);
         matcher = pattern.matcher(javaCode);
         if (matcher.find()) {
             return Optional.of(matcher.group(1));
         }
 
-        // Если нет public класса, ищем любой класс
-        pattern = Pattern.compile(
-                "\\bclass\\s+(\\w+)",
-                Pattern.DOTALL
-        );
+        pattern = Pattern.compile("\\bclass\\s+(\\w+)", Pattern.DOTALL);
         matcher = pattern.matcher(javaCode);
         if (matcher.find()) {
             return Optional.of(matcher.group(1));
@@ -124,7 +191,4 @@ public class ExecutorScriptService {
 
         return Optional.empty();
     }
-
-
-
 }

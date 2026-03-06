@@ -49,14 +49,14 @@ create table BD_REPORT(
                           SCRIPT VARCHAR,
                           IS_SQL boolean,
                           DATA_BANDS varchar,
-                          IS_BOOK_ORIENTATION boolean
-
-
+                          IS_BOOK_ORIENTATION boolean,
+                          LAYOUT_SETTINGS_PARAMS varchar,
+                          LAYOUT_PARAMS varchar
 );
 
-
-
---drop table BD_USR;
---drop table BD_REPORT;
-
--- SELECT version();
+create table BD_REPORT_GLOBALS(
+                                  ID SERIAL PRIMARY KEY ,
+                                  KEY varchar(50) NOT NULL UNIQUE,
+                                  VALUE varchar DEFAULT '',
+                                  DESCRIPTION varchar DEFAULT ''
+);
