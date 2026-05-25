@@ -23,12 +23,10 @@ import java.util.List;
 @RequestMapping("/api/user")
 public class UserController {
 
-    private final UserValidator userValidator;
     private final UserService userService;
 
     @Autowired
-    public UserController(UserValidator userValidator, UserService userService) {
-        this.userValidator = userValidator;
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 

@@ -26,14 +26,6 @@ CREATE TABLE USER_ROLES (
                             PRIMARY KEY (USER_ID, ROLE_ID)
 );
 
-
-
-create table BD_PLAN(
-                        ID SERIAL PRIMARY KEY ,
-                        PLAN_ID varchar(100) NOT NULL ,
-                        DATA varchar NOT NULL
-);
-
 create table BD_REPORT(
                           ID SERIAL PRIMARY KEY ,
                           REPORT_NAME varchar(30),
