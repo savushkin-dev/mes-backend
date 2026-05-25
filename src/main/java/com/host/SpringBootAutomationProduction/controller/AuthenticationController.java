@@ -56,12 +56,16 @@ public class AuthenticationController {
 
 
     @PostMapping("/authenticate")
-    public ResponseEntity<LoginResponseDTO> performAuthentication(@RequestBody LoginRequestDTO loginRequestDto) {
-
+    public ResponseEntity<LoginResponseDTO> performAuthentication(@Valid @RequestBody LoginRequestDTO loginRequestDto) {
 
         String username = loginRequestDto.getUsername();
         String password = loginRequestDto.getPassword();
         String domain = "bmk.by";
+
+        if (username == null || username.trim().isEmpty() ||
+                password == null || password.trim().isEmpty()) {
+            throw new BadCredentialsException("Логин и пароль не могут быть пустыми");
+        }
 
         // Сначала пробуем NTLM аутентификацию
         boolean isNtlmAuthenticated = domainAuthService

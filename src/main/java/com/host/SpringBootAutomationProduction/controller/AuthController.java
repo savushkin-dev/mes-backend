@@ -15,18 +15,6 @@ public class AuthController {
 
     private final DomainAuthService authService;
 
-//    @PostMapping("/test")
-//    public ResponseEntity<AuthResponse> testAuthentication(@Valid @RequestBody AuthRequest request) {
-//
-//        AuthResponse response = authService.authenticate(
-//                request.username(),
-//                request.password(),
-//                request.domain()
-//        );
-//
-//        return ResponseEntity.ok(response);
-//    }
-
 
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
