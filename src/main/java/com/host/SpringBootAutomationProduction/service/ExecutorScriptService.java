@@ -8,7 +8,6 @@ import javax.tools.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -16,6 +15,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,7 +26,7 @@ public class ExecutorScriptService {
 
     public Object executeScript(String javaCode, Map<String, String> parameters) {
         String className;
-        if(findMainClassName(javaCode).isPresent()){
+        if (findMainClassName(javaCode).isPresent()) {
             className = findMainClassName(javaCode).get();
         } else {
             throw new RuntimeException("Unable to find main class name for " + javaCode);
@@ -36,25 +36,44 @@ public class ExecutorScriptService {
 
         try {
             Class<?> cls = compileAndLoadClass(javaCode, className);
-
             Method method = cls.getDeclaredMethod(methodName, Map.class, Map.class);
 
             if (!Modifier.isStatic(method.getModifiers())) {
                 throw new IllegalArgumentException("Method must be static");
             }
 
-            return method.invoke(null, parameters, ReportGlobalVarsService.getGlobalVarsCache());
+            Object[] result = new Object[1];
+            Exception[] error = new Exception[1];
 
-        } catch (InvocationTargetException e) {
-            // Ошибка выполнения скрипта
-            Throwable cause = e.getCause();
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            cause.printStackTrace(pw);
-            log.error("Script execution error", e);
-            throw new RuntimeException("Script execution error: " + cause.getMessage() + "\n" + sw.toString());
+            Thread scriptThread = new Thread(() -> {
+                try {
+                    result[0] = method.invoke(null, parameters, ReportGlobalVarsService.getGlobalVarsCache());
+                } catch (Exception e) {
+                    error[0] = e;
+                }
+            });
+
+            scriptThread.start();
+
+            // 10 минут на выполнения скрипта
+            scriptThread.join(TimeUnit.MINUTES.toMillis(10));
+
+            if (scriptThread.isAlive()) {
+                scriptThread.stop();
+                throw new RuntimeException("Script execution timeout exceeded ");
+            }
+
+            if (error[0] != null) {
+                Throwable cause = error[0].getCause();
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                cause.printStackTrace(pw);
+                throw new RuntimeException("Script execution error: " + cause.getMessage() + "\n" + sw.toString());
+            }
+
+            return result[0];
+
         } catch (Exception e) {
-            log.error("Script execution failed", e);
             throw new RuntimeException("Script execution error: " + e.getMessage(), e);
         }
     }
