@@ -1,15 +1,12 @@
 package com.host.SpringBootAutomationProduction.exceptions;
 
 import com.host.SpringBootAutomationProduction.model.ErrorResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -18,7 +15,6 @@ import org.springframework.web.context.request.WebRequest;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
 
 
     @ExceptionHandler({AccessDeniedException.class})
@@ -74,16 +70,11 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(ex.getMessage()));
     }
 
-    @ExceptionHandler({AuthenticationException.class}) /* отвечает за авторизацию */
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(Exception ex, HttpServletRequest request, HttpServletResponse response) {
-        log.error("Handler {}, {}", ex.getClass(), ex.getMessage(), ex);
-        ErrorResponse error = new ErrorResponse(ex.getMessage());
-        if (response.getHeader("error") != null)
-            error.setMessage(response.getHeader("error"));
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
+    @ExceptionHandler(RefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleRefreshTokenException(RefreshTokenException ex) {
+        log.error("Refresh token error: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

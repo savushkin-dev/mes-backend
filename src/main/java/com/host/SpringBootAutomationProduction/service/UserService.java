@@ -30,14 +30,16 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final RoleService roleService;
+    private final RefreshTokenService refreshTokenService;
 
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, RoleService roleService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, RoleService roleService, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.roleService = roleService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public Optional<User> findByUsername(String username) {
@@ -48,6 +50,10 @@ public class UserService {
         return userRepository.findAll().stream()
                 .map(UserDTO::new)
                 .collect(Collectors.toList());
+    }
+
+    public Optional<User> findById(int id) {
+        return userRepository.findById(id);
     }
 
     @Transactional
@@ -73,6 +79,7 @@ public class UserService {
         user.setPassword("-"); // Пароль не хранится для NTLM пользователей
         Role role = roleService.findByName("ROLE_VIEWER").orElseThrow(() -> new RuntimeException("Role ROLE_VIEWER not found"));
         user.setRoles(Set.of(role));
+        user.setEnabled(true);
         userRepository.save(user);
         log.info("User STANDARD registered successfully with username: {}", user.getUsername());
         return user;
@@ -86,6 +93,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(password));
         Role role = roleService.findByName("ROLE_VIEWER").orElseThrow(() -> new RuntimeException("Role ROLE_VIEWER not found"));
         user.setRoles(Set.of(role));
+        user.setEnabled(true);
         userRepository.save(user);
         log.info("User NTLM registered successfully with username: {}", user.getUsername());
         return user;
@@ -108,6 +116,29 @@ public class UserService {
         userRepository.delete(user);
 
         log.info("User deleted successfully: {} (id: {}) by admin: {}", user.getUsername(), userId, currentUser.getUsername());
+    }
+
+    @Transactional
+    public void disableUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+        user.setEnabled(false);
+        userRepository.save(user);
+
+        // Отзываем все refresh токены
+        refreshTokenService.revokeAllUserTokens(username);
+
+        log.info("User {} disabled", username);
+    }
+
+    @Transactional
+    public void enableUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+        user.setEnabled(true);
+        userRepository.save(user);
+
+        log.info("User {} enabled", username);
     }
 
     public User assignRoleToUser(String username, String roleName) {
