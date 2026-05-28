@@ -42,6 +42,12 @@ public class AdminController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable int userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
 
     private RoleDTO convertToReportTemplateDTO(Role role) {
         return new ModelMapper().map(role, RoleDTO.class);

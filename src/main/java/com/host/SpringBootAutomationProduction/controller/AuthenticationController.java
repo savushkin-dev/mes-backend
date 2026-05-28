@@ -1,6 +1,5 @@
 package com.host.SpringBootAutomationProduction.controller;
 
-
 import com.host.SpringBootAutomationProduction.dto.LoginRequestDTO;
 import com.host.SpringBootAutomationProduction.dto.LoginResponseDTO;
 import com.host.SpringBootAutomationProduction.dto.RegUserDTO;
@@ -11,7 +10,6 @@ import com.host.SpringBootAutomationProduction.model.postgres.User;
 import com.host.SpringBootAutomationProduction.security.JWTUtil;
 import com.host.SpringBootAutomationProduction.service.DomainAuthService;
 import com.host.SpringBootAutomationProduction.service.PersonDetailsService;
-import com.host.SpringBootAutomationProduction.service.RegistrationService;
 import com.host.SpringBootAutomationProduction.service.UserService;
 import com.host.SpringBootAutomationProduction.util.UserValidator;
 import jakarta.validation.Valid;
@@ -29,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,16 +35,14 @@ import java.util.Optional;
 public class AuthenticationController {
 
     private final UserValidator userValidator;
-    private final RegistrationService registrationService;
     private final JWTUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final DomainAuthService domainAuthService;
 
     @Autowired
-    public AuthenticationController(UserValidator userValidator, RegistrationService registrationService, JWTUtil jwtUtil, AuthenticationManager authenticationManager, PersonDetailsService personDetailsService, UserService userService, DomainAuthService domainAuthService) {
+    public AuthenticationController(UserValidator userValidator, JWTUtil jwtUtil, AuthenticationManager authenticationManager, PersonDetailsService personDetailsService, UserService userService, DomainAuthService domainAuthService) {
         this.userValidator = userValidator;
-        this.registrationService = registrationService;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
         this.userService = userService;
@@ -87,7 +82,6 @@ public class AuthenticationController {
 
         }
 
-        // Генерация JWT токена
         String token = jwtUtil.generateToken(user);
 
         return ResponseEntity.ok(new LoginResponseDTO(token));
@@ -114,7 +108,7 @@ public class AuthenticationController {
             throw new UserNotCreatedException(errorMessage.toString());
         }
 
-        registrationService.register(user);
+        user = userService.createStandardUser(user.getUsername(), user.getPassword());
 
         String token = jwtUtil.generateToken(user);
         return ResponseEntity.ok(new LoginResponseDTO(token));

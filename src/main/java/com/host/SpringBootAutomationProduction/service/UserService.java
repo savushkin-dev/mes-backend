@@ -4,12 +4,12 @@ import com.host.SpringBootAutomationProduction.dto.UserDTO;
 import com.host.SpringBootAutomationProduction.exceptions.NotFoundException;
 import com.host.SpringBootAutomationProduction.exceptions.UserNotFoundException;
 import com.host.SpringBootAutomationProduction.model.AuthType;
-import com.host.SpringBootAutomationProduction.model.RoleType;
 import com.host.SpringBootAutomationProduction.model.postgres.Role;
 import com.host.SpringBootAutomationProduction.model.postgres.User;
 import com.host.SpringBootAutomationProduction.repositories.postgres.RoleRepository;
 import com.host.SpringBootAutomationProduction.repositories.postgres.UserRepository;
 import com.host.SpringBootAutomationProduction.security.UserCurDetails;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class UserService {
@@ -55,8 +56,7 @@ public class UserService {
         Set<Role> roles = roleService.findByRoleNames(newRoles);
         user.setRoles(roles);
         userRepository.save(user);
-        UserDTO userDTO = new UserDTO(user);
-        return userDTO;
+        return new UserDTO(user);
     }
 
     private User getUserOrgDetails() {
@@ -71,11 +71,11 @@ public class UserService {
         user.setUsername(username);
         user.setAuthType(AuthType.NTLM);
         user.setPassword("-"); // Пароль не хранится для NTLM пользователей
-
-        Role role = roleRepository.findByName("ROLE_VIEWER").get();
+        Role role = roleService.findByName("ROLE_VIEWER").orElseThrow(() -> new RuntimeException("Role ROLE_VIEWER not found"));
         user.setRoles(Set.of(role));
-
-        return userRepository.save(user);
+        userRepository.save(user);
+        log.info("User STANDARD registered successfully with username: {}", user.getUsername());
+        return user;
     }
 
     @Transactional
@@ -84,11 +84,30 @@ public class UserService {
         user.setUsername(username);
         user.setAuthType(AuthType.STANDARD);
         user.setPassword(passwordEncoder.encode(password));
-
-        Role role = roleRepository.findByName("ROLE_USER").get();
+        Role role = roleService.findByName("ROLE_VIEWER").orElseThrow(() -> new RuntimeException("Role ROLE_VIEWER not found"));
         user.setRoles(Set.of(role));
+        userRepository.save(user);
+        log.info("User NTLM registered successfully with username: {}", user.getUsername());
+        return user;
+    }
 
-        return userRepository.save(user);
+    @Transactional
+    public void deleteUser(int userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
+        // Не даем удалить самого себя
+        User currentUser = getUserOrgDetails();
+        if (currentUser.getId() == userId) {
+            throw new RuntimeException("Cannot delete your own account");
+        }
+
+        user.getRoles().clear();
+        userRepository.save(user);
+
+        userRepository.delete(user);
+
+        log.info("User deleted successfully: {} (id: {}) by admin: {}", user.getUsername(), userId, currentUser.getUsername());
     }
 
     public User assignRoleToUser(String username, String roleName) {
