@@ -36,15 +36,6 @@ public class JWTFilter extends OncePerRequestFilter {
         this.refreshTokenService = refreshTokenService;
     }
 
-//    @Override
-//    protected boolean shouldNotFilter(HttpServletRequest request) {
-//        String path = request.getRequestURI();
-//        // Эти эндпоинты вообще не идут в JWTFilter
-//        return path.equals("/api/authentication/authenticate") ||
-//                path.equals("/api/authentication/refresh") ||
-//                path.equals("/api/authentication/registration");
-//    }
-
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
