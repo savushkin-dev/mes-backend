@@ -81,22 +81,41 @@ public class UserService {
         user.setRoles(Set.of(role));
         user.setEnabled(true);
         userRepository.save(user);
-        log.info("User STANDARD registered successfully with username: {}", user.getUsername());
+        log.info("User NTLM registered successfully with username: {}", user.getUsername());
         return user;
     }
 
+
     @Transactional
-    public User createStandardUser(String username, String password) {
+    public User createStandardUser(String username, String password, Set<String> roleNames) {
+        if (findByUsername(username).isPresent()) {
+            throw new RuntimeException("Пользователь с именем '" + username + "' уже существует");
+        }
+
         User user = new User();
         user.setUsername(username);
         user.setAuthType(AuthType.STANDARD);
         user.setPassword(passwordEncoder.encode(password));
-        Role role = roleService.findByName("ROLE_VIEWER").orElseThrow(() -> new RuntimeException("Role ROLE_VIEWER not found"));
-        user.setRoles(Set.of(role));
+
+        // Добавляем роли (обязательно ROLE_VIEWER + переданные)
+        Set<Role> roles = getRolesWithViewer(roleNames);
+        user.setRoles(roles);
         user.setEnabled(true);
+
         userRepository.save(user);
-        log.info("User NTLM registered successfully with username: {}", user.getUsername());
+        log.info("User STANDARD registered successfully with username: {} and roles: {}", username, roleNames);
         return user;
+    }
+
+    // Вспомогательный метод для формирования ролей с обязательным ROLE_VIEWER
+    private Set<Role> getRolesWithViewer(Set<String> roleNames) {
+        Set<String> allRoles = new HashSet<>();
+        if (roleNames != null && !roleNames.isEmpty()) {
+            allRoles.addAll(roleNames);
+        }
+        allRoles.add("ROLE_VIEWER");
+
+        return roleService.findByRoleNames(allRoles);
     }
 
     @Transactional

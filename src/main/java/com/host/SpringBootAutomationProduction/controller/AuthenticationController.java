@@ -136,7 +136,7 @@ public class AuthenticationController {
             throw new UserNotCreatedException(errorMessage.toString());
         }
 
-        user = userService.createStandardUser(user.getUsername(), user.getPassword());
+        user = userService.createStandardUser(user.getUsername(), user.getPassword(), null);
 
         String accessToken = jwtUtil.generateAccessToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
