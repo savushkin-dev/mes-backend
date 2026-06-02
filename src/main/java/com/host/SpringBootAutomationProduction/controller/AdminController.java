@@ -1,12 +1,15 @@
 package com.host.SpringBootAutomationProduction.controller;
 
 
+import com.host.SpringBootAutomationProduction.dto.CreateUserRequest;
 import com.host.SpringBootAutomationProduction.dto.RoleDTO;
 import com.host.SpringBootAutomationProduction.dto.UpdateRolesDTO;
 import com.host.SpringBootAutomationProduction.dto.UserDTO;
 import com.host.SpringBootAutomationProduction.model.postgres.Role;
+import com.host.SpringBootAutomationProduction.model.postgres.User;
 import com.host.SpringBootAutomationProduction.service.RoleService;
 import com.host.SpringBootAutomationProduction.service.UserService;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,7 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 @RequestMapping("/api/admin")
 public class AdminController {
 
@@ -40,6 +43,22 @@ public class AdminController {
     public ResponseEntity<UserDTO> updateUserRoles(@PathVariable int userId, @RequestBody UpdateRolesDTO request) {
         UserDTO updatedUser = userService.updateUserRoles(userId, request.getRoles());
         return ResponseEntity.ok(updatedUser);
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable int userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody CreateUserRequest request) {
+        User user = userService.createStandardUser(
+                request.getUsername(),
+                request.getPassword(),
+                request.getRoles()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(new UserDTO(user));
     }
 
 

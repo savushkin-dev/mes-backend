@@ -22,10 +22,8 @@ public class User {
     @Column(name = "F_ID")
     private int id;
 
-
     @Column(name = "USERNAME")
     private String username;
-
 
     @Column(name = "PASSWORD")
     private String password;
@@ -40,6 +38,9 @@ public class User {
             joinColumns = @JoinColumn(name = "USER_ID"),
             inverseJoinColumns = @JoinColumn(name = "ROLE_ID"))
     private Set<Role> roles;
+
+    @Column(name = "ENABLED", nullable = false)
+    private boolean enabled = true;
 
 
     @Override
