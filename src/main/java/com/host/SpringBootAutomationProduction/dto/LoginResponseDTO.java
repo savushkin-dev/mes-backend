@@ -1,15 +1,11 @@
 package com.host.SpringBootAutomationProduction.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 public class LoginResponseDTO {
-
-    private String uuid;
-
-    public LoginResponseDTO(String uuid) {
-        this.uuid = uuid;
-    }
+    private String accessToken;
+    private String refreshToken;
 }

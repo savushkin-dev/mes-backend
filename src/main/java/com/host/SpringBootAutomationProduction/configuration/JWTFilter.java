@@ -1,21 +1,19 @@
 package com.host.SpringBootAutomationProduction.configuration;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.host.SpringBootAutomationProduction.exceptions.UserNotFoundException;
 import com.host.SpringBootAutomationProduction.security.JWTUtil;
 import com.host.SpringBootAutomationProduction.service.PersonDetailsService;
+import com.host.SpringBootAutomationProduction.service.RefreshTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -25,22 +23,23 @@ import java.io.IOException;
 @Component
 public class JWTFilter extends OncePerRequestFilter {
 
-    private final AuthenticationEntryPoint authenticationEntryPoint;
     private final JWTUtil jwtUtil;
-
     private final PersonDetailsService personDetailsService;
-
+    private final RefreshTokenService refreshTokenService;
 
     @Autowired
-    public JWTFilter(AuthenticationEntryPoint authenticationEntryPoint, JWTUtil jwtUtil, PersonDetailsService personDetailsService) {
-        this.authenticationEntryPoint = authenticationEntryPoint;
+    public JWTFilter(JWTUtil jwtUtil,
+                     PersonDetailsService personDetailsService,
+                     RefreshTokenService refreshTokenService) {
         this.jwtUtil = jwtUtil;
         this.personDetailsService = personDetailsService;
+        this.refreshTokenService = refreshTokenService;
     }
 
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
 
@@ -54,17 +53,19 @@ public class JWTFilter extends OncePerRequestFilter {
 
             try {
                 String username = jwtUtil.validateTokenAndRetrieveClaim(jwt);
-                String authType = jwtUtil.extractAuthType(jwt); // Получаем тип аутентификации
+                String authType = jwtUtil.extractAuthType(jwt);
 
-                UserDetails userDetails = personDetailsService.loadUserByUsername(username);
-
-                //проверяем соответствие типа аутентификации
-                if (userDetails.getPassword() == null && !"NTLM".equals(authType)) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid authentication type");
+                // Проверяем наличие валидного refresh token (пользователь не разлогинен)
+                if (!refreshTokenService.hasValidRefreshToken(username)) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session expired, please login again");
                     return;
                 }
 
-                if (userDetails.getPassword() != null && !"STANDARD".equals(authType)) {
+                UserDetails userDetails = personDetailsService.loadUserByUsername(username);
+
+                // Проверка типа аутентификации
+                String userAuthType = userDetails.getPassword() == null ? "NTLM" : "STANDARD";
+                if (!userAuthType.equals(authType)) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid authentication type");
                     return;
                 }
@@ -72,30 +73,23 @@ public class JWTFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
                                 userDetails,
-                                userDetails.getPassword(), // credentials всегда null для JWT
+                                userDetails.getPassword(),
                                 userDetails.getAuthorities()
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
 
             } catch (JWTVerificationException e) {
-                response.setHeader("error","Invalid JWT Token");
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                log.error("JWT verification error: {}", e.getMessage());
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT Token");
                 return;
             } catch (UsernameNotFoundException e) {
-                response.setHeader("error","User not found");
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                log.error("User not found: {}", e.getMessage());
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
                 return;
             }
         }
 
-        try {
-            filterChain.doFilter(request, response);
-        } catch (Exception e) {
-            authenticationEntryPoint.commence(request, response, new InsufficientAuthenticationException(e.getMessage()));
-        }
-
-
+        filterChain.doFilter(request, response);
     }
-
 }

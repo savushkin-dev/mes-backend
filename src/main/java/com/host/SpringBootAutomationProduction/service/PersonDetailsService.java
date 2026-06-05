@@ -1,6 +1,5 @@
 package com.host.SpringBootAutomationProduction.service;
 
-
 import com.host.SpringBootAutomationProduction.exceptions.UserNotFoundException;
 import com.host.SpringBootAutomationProduction.model.postgres.User;
 import com.host.SpringBootAutomationProduction.repositories.postgres.UserRepository;
@@ -29,6 +28,13 @@ public class PersonDetailsService implements UserDetailsService {
             throw new UserNotFoundException("Username not found!");
         }
 
-        return new UserCurDetails(person.get());
+        User user = person.get();
+
+        // Проверка enabled
+        if (!user.isEnabled()) {
+            throw new UsernameNotFoundException("User is disabled!");
+        }
+
+        return new UserCurDetails(user);
     }
 }
