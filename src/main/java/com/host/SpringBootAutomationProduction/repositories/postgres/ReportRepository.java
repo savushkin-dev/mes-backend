@@ -9,7 +9,6 @@ import java.util.Optional;
 @Repository
 public interface ReportRepository extends JpaRepository<ReportTemplate, Integer> {
 
-    Optional<ReportTemplate> findByReportName(String reportName);
-
+    Optional<ReportTemplate> findByReportCategoryAndReportName(String reportCategory, String reportName);
 
 }

@@ -36,15 +36,17 @@ public class ReportController {
         this.globalVarsService = globalVarsService;
     }
 
-
-    @GetMapping("/{reportName}")
-    public ReportTemplateDTO getReportByName(@PathVariable("reportName") String reportName) {
-        return convertToReportTemplateDTO(reportService.findByReportName(reportName)).encrypt();
+    @GetMapping("/{category}/{reportName}")
+    public ReportTemplateDTO getReportByCategoryAndName(@PathVariable("category") String category,
+                                                        @PathVariable("reportName") String reportName) {
+        return convertToReportTemplateDTO(reportService.findByReportCategoryAndName(category, reportName)).encrypt();
     }
 
-    @GetMapping("/{reportName}/parameters")
-    public ResponseEntity<?> getTemplateParameters(@PathVariable String reportName) {
-        return ResponseEntity.ok(reportService.getParametersMeta(reportName));
+    @GetMapping("/{category}/{reportName}/parameters")
+    public ResponseEntity<?> getTemplateParameters(
+            @PathVariable("category") String category,
+            @PathVariable("reportName") String reportName) {
+        return ResponseEntity.ok(reportService.getParametersMeta(category, reportName));
     }
 
     @GetMapping("/names")
@@ -65,10 +67,14 @@ public class ReportController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("/data/{reportName}")
-    public ResponseEntity<?> getDataByReportName(@PathVariable("reportName") String reportName,
-                                                 @RequestBody ParametersDTO parameters) {
-        return ResponseEntity.ok(reportService.getDataByReportName(reportName, parameters.getParameters()));
+    @PostMapping("/data/{category}/{reportName}")
+    public ResponseEntity<?> getDataByReportName(
+            @PathVariable("category") String category,
+            @PathVariable("reportName") String reportName,
+            @RequestBody ParametersDTO parameters) {
+        return ResponseEntity.ok(
+                reportService.getDataByReportName(category, reportName, parameters.getParameters())
+        );
     }
 
     @PostMapping("/data")
