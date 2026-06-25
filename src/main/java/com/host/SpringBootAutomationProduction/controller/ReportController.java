@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -54,9 +55,14 @@ public class ReportController {
         return ResponseEntity.ok(reportService.findAllReportName());
     }
 
-    @GetMapping("/categories")
+    @GetMapping("/grouped-by-category")
     public ResponseEntity<List<Map<String, Object>>> getGroupedReports() {
         return ResponseEntity.ok(reportService.getReportsNameGroupedByCategory());
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<Set<String>> getCategories() {
+        return ResponseEntity.ok(reportService.getAllReportCategories());
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")

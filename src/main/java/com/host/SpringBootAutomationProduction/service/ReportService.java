@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -198,6 +199,15 @@ public class ReportService {
         }
 
         return result;
+    }
+
+    public Set<String> getAllReportCategories() {
+        List<ReportTemplate> allReports = reportRepository.findAll();
+
+        return allReports.stream()
+                .map(ReportTemplate::getReportCategory)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 
 
