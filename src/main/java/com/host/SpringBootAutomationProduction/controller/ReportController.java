@@ -9,6 +9,7 @@ import com.host.SpringBootAutomationProduction.model.postgres.ReportGlobalVars;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
 import com.host.SpringBootAutomationProduction.service.ReportGlobalVarsService;
 import com.host.SpringBootAutomationProduction.service.ReportService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +68,7 @@ public class ReportController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
     @PostMapping("/create")
-    public ResponseEntity<?> createOrUpdateReport(@RequestBody ReportTemplateDTO reportTemplateDTO) {
+    public ResponseEntity<?> createOrUpdateReport(@Valid @RequestBody ReportTemplateDTO reportTemplateDTO) {
         ReportTemplate reportTemplate = convertToReportTemplate(reportTemplateDTO.decrypt());
         reportService.saveOrUpdateReport(reportTemplate);
         return ResponseEntity.status(HttpStatus.CREATED).build();
