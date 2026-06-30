@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,21 +34,24 @@ public class ReportService {
         this.executorScriptService = executorScriptService;
     }
 
-
-    public ReportTemplate findByReportName(String reportName) {
-        Optional<ReportTemplate> reportTemplateOpt = reportRepository.findByReportName(reportName);
+    public ReportTemplate findByReportCategoryAndName(String category, String reportName) {
+        Optional<ReportTemplate> reportTemplateOpt = reportRepository.findByReportCategoryAndReportName(category, reportName);
         return reportTemplateOpt.orElseThrow(() ->
-                new ReportTemplateNotFoundException("ReportTemplate not found with report name: " + reportName));
-
+                new ReportTemplateNotFoundException("ReportTemplate not found with category: " + category + " and name: " + reportName));
     }
+
 
     @Transactional
     public void saveOrUpdateReport(ReportTemplate reportTemplate) {
-        Optional<ReportTemplate> reportTemplateOpt = reportRepository.findByReportName(reportTemplate.getReportName());
+        // Ищем по категории и имени
+        Optional<ReportTemplate> reportTemplateOpt = reportRepository
+                .findByReportCategoryAndReportName(
+                        reportTemplate.getReportCategory(),
+                        reportTemplate.getReportName()
+                );
 
         if(reportTemplateOpt.isPresent()) {
             ReportTemplate reportTemplateToUpdate = reportTemplateOpt.get();
-            reportTemplateToUpdate.setReportCategory(reportTemplate.getReportCategory());
             reportTemplateToUpdate.setDbUrl(reportTemplate.getDbUrl());
             reportTemplateToUpdate.setDbUsername(reportTemplate.getDbUsername());
             reportTemplateToUpdate.setDbPassword(reportTemplate.getDbPassword());
@@ -63,10 +67,12 @@ public class ReportService {
             reportTemplateToUpdate.setLayoutSettingsParams(reportTemplate.getLayoutSettingsParams());
             reportTemplateToUpdate.setLayoutParams(reportTemplate.getLayoutParams());
             reportRepository.save(reportTemplateToUpdate);
-            log.info("Report updated successfully with report name: {}", reportTemplate.getReportName());
+            log.info("Report updated successfully with category: {} and name: {}",
+                    reportTemplate.getReportCategory(), reportTemplate.getReportName());
         } else {
             reportRepository.save(reportTemplate);
-            log.info("Report created successfully with report name: {}", reportTemplate.getReportName());
+            log.info("Report created successfully with category: {} and name: {}",
+                    reportTemplate.getReportCategory(), reportTemplate.getReportName());
         }
     }
 
@@ -76,12 +82,32 @@ public class ReportService {
 
         if(reportTemplateOpt.isPresent()) {
             ReportTemplate reportTemplateToUpdate = reportTemplateOpt.get();
+
+            // Проверяем, не занята ли новая пара (категория + имя) другим отчетом
+            if (!reportTemplateToUpdate.getReportCategory().equals(reportTemplate.getReportCategory()) ||
+                    !reportTemplateToUpdate.getReportName().equals(reportTemplate.getReportName())) {
+
+                Optional<ReportTemplate> existingReport = reportRepository
+                        .findByReportCategoryAndReportName(
+                                reportTemplate.getReportCategory(),
+                                reportTemplate.getReportName()
+                        );
+
+                if (existingReport.isPresent() && existingReport.get().getId() != reportTemplate.getId()) {
+                    throw new IllegalArgumentException(
+                            "Report with category '" + reportTemplate.getReportCategory() +
+                                    "' and name '" + reportTemplate.getReportName() + "' already exists"
+                    );
+                }
+            }
+
             reportTemplateToUpdate.setReportCategory(reportTemplate.getReportCategory());
             reportTemplateToUpdate.setReportName(reportTemplate.getReportName());
             reportRepository.save(reportTemplateToUpdate);
-            log.info("Report updated successfully with report name: {}", reportTemplate.getReportName());
+            log.info("Report updated successfully with category: {} and name: {}",
+                    reportTemplate.getReportCategory(), reportTemplate.getReportName());
         } else {
-            throw new ReportTemplateNotFoundException("ReportTemplate not found with report name: " + reportTemplate.getReportName());
+            throw new ReportTemplateNotFoundException("ReportTemplate not found with id: " + reportTemplate.getId());
         }
     }
 
@@ -96,8 +122,8 @@ public class ReportService {
         }
     }
 
-    public ReportParamMetaRespDTO getParametersMeta(String reportName) {
-        ReportTemplate reportTemplate = findByReportName(reportName);
+    public ReportParamMetaRespDTO getParametersMeta(String category, String reportName) {
+        ReportTemplate reportTemplate = findByReportCategoryAndName(category, reportName);
         return ReportParamMetaRespDTO.builder()
                 .parameters(reportTemplate.getParameters())
                 .layoutParams(reportTemplate.getLayoutParams())
@@ -114,11 +140,10 @@ public class ReportService {
         return reportsName;
     }
 
-    public Map<?,?> getDataByReportName(String reportName, Map<String, String> parameters) {
-        ReportTemplate reportTemplate = findByReportName(reportName);
+    public Map<?,?> getDataByReportName(String category, String reportName, Map<String, String> parameters) {
+        ReportTemplate reportTemplate = findByReportCategoryAndName(category, reportName);
         return getDataForReport(reportTemplate, parameters);
     }
-
 
     public Map<?,?> getDataForReport(ReportTemplate reportTemplate, Map<String, String> parameters) {
         try {
@@ -174,6 +199,15 @@ public class ReportService {
         }
 
         return result;
+    }
+
+    public Set<String> getAllReportCategories() {
+        List<ReportTemplate> allReports = reportRepository.findAll();
+
+        return allReports.stream()
+                .map(ReportTemplate::getReportCategory)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 
 

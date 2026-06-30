@@ -10,7 +10,10 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "BD_REPORT")
+@Table(name = "BD_REPORT",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"REPORT_CATEGORY", "REPORT_NAME"})
+        })
 public class ReportTemplate {
 
     @Id
@@ -18,10 +21,10 @@ public class ReportTemplate {
     @Column(name = "ID")
     private int id;
 
-    @Column(name = "REPORT_NAME")
+    @Column(name = "REPORT_NAME", nullable = false)
     private String reportName;
 
-    @Column(name = "REPORT_CATEGORY")
+    @Column(name = "REPORT_CATEGORY", nullable = false)
     private String reportCategory;
 
     @Column(name = "DB_URL")
