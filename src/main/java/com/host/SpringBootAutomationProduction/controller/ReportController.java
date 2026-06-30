@@ -9,6 +9,7 @@ import com.host.SpringBootAutomationProduction.model.postgres.ReportGlobalVars;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
 import com.host.SpringBootAutomationProduction.service.ReportGlobalVarsService;
 import com.host.SpringBootAutomationProduction.service.ReportService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,15 +38,17 @@ public class ReportController {
         this.globalVarsService = globalVarsService;
     }
 
-
-    @GetMapping("/{reportName}")
-    public ReportTemplateDTO getReportByName(@PathVariable("reportName") String reportName) {
-        return convertToReportTemplateDTO(reportService.findByReportName(reportName)).encrypt();
+    @GetMapping("/{category}/{reportName}")
+    public ReportTemplateDTO getReportByCategoryAndName(@PathVariable("category") String category,
+                                                        @PathVariable("reportName") String reportName) {
+        return convertToReportTemplateDTO(reportService.findByReportCategoryAndName(category, reportName)).encrypt();
     }
 
-    @GetMapping("/{reportName}/parameters")
-    public ResponseEntity<?> getTemplateParameters(@PathVariable String reportName) {
-        return ResponseEntity.ok(reportService.getParametersMeta(reportName));
+    @GetMapping("/{category}/{reportName}/parameters")
+    public ResponseEntity<?> getTemplateParameters(
+            @PathVariable("category") String category,
+            @PathVariable("reportName") String reportName) {
+        return ResponseEntity.ok(reportService.getParametersMeta(category, reportName));
     }
 
     @GetMapping("/names")
@@ -52,23 +56,32 @@ public class ReportController {
         return ResponseEntity.ok(reportService.findAllReportName());
     }
 
-    @GetMapping("/categories")
+    @GetMapping("/grouped-by-category")
     public ResponseEntity<List<Map<String, Object>>> getGroupedReports() {
         return ResponseEntity.ok(reportService.getReportsNameGroupedByCategory());
     }
 
+    @GetMapping("/categories")
+    public ResponseEntity<Set<String>> getCategories() {
+        return ResponseEntity.ok(reportService.getAllReportCategories());
+    }
+
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EDITOR')")
     @PostMapping("/create")
-    public ResponseEntity<?> createOrUpdateReport(@RequestBody ReportTemplateDTO reportTemplateDTO) {
+    public ResponseEntity<?> createOrUpdateReport(@Valid @RequestBody ReportTemplateDTO reportTemplateDTO) {
         ReportTemplate reportTemplate = convertToReportTemplate(reportTemplateDTO.decrypt());
         reportService.saveOrUpdateReport(reportTemplate);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("/data/{reportName}")
-    public ResponseEntity<?> getDataByReportName(@PathVariable("reportName") String reportName,
-                                                 @RequestBody ParametersDTO parameters) {
-        return ResponseEntity.ok(reportService.getDataByReportName(reportName, parameters.getParameters()));
+    @PostMapping("/data/{category}/{reportName}")
+    public ResponseEntity<?> getDataByReportName(
+            @PathVariable("category") String category,
+            @PathVariable("reportName") String reportName,
+            @RequestBody ParametersDTO parameters) {
+        return ResponseEntity.ok(
+                reportService.getDataByReportName(category, reportName, parameters.getParameters())
+        );
     }
 
     @PostMapping("/data")
