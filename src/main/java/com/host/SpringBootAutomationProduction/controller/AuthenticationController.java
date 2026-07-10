@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -63,10 +62,8 @@ public class AuthenticationController {
 
         String username = loginRequestDto.getUsername().toLowerCase().trim();
         String password = loginRequestDto.getPassword();
-        String domain = "bmk.by";
 
-        boolean isNtlmAuthenticated = domainAuthService
-                .authenticate(username, password, domain);
+        boolean isNtlmAuthenticated = domainAuthService.authenticate(username, password);
 
         User user;
 
