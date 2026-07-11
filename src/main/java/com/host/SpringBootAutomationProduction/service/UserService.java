@@ -1,5 +1,6 @@
 package com.host.SpringBootAutomationProduction.service;
 
+import com.host.SpringBootAutomationProduction.dto.CreateUserRequest;
 import com.host.SpringBootAutomationProduction.dto.UserDTO;
 import com.host.SpringBootAutomationProduction.exceptions.NotFoundException;
 import com.host.SpringBootAutomationProduction.exceptions.UserNotFoundException;
@@ -72,13 +73,25 @@ public class UserService {
     }
 
     @Transactional
-    public User createNtlmUser(String username) {
+    public User createUser(CreateUserRequest request) {
+        if (request.isNtlm()) {
+            return createNtlmUser(request.getUsername(), request.getRoles());
+        }
+        return createStandardUser(
+                request.getUsername(),
+                request.getPassword(),
+                request.getRoles()
+        );
+    }
+
+    @Transactional
+    public User createNtlmUser(String username, Set<String> roleNames) {
         User user = new User();
         user.setUsername(username);
         user.setAuthType(AuthType.NTLM);
         user.setPassword("-"); // Пароль не хранится для NTLM пользователей
-        Role role = roleService.findByName("ROLE_VIEWER").orElseThrow(() -> new RuntimeException("Role ROLE_VIEWER not found"));
-        user.setRoles(Set.of(role));
+        Set<Role> roles = getRolesWithViewer(roleNames);
+        user.setRoles(roles);
         user.setEnabled(true);
         userRepository.save(user);
         log.info("User NTLM registered successfully with username: {}", user.getUsername());

@@ -27,6 +27,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,7 +70,7 @@ public class AuthenticationController {
 
         if (isNtlmAuthenticated) {
             Optional<User> findUser = userService.findByUsername(username);
-            user = findUser.orElseGet(() -> userService.createNtlmUser(username));
+            user = findUser.orElseGet(() -> userService.createNtlmUser(username, new HashSet<>()));
         } else {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
             Optional<User> findUser = userService.findByUsername(username);

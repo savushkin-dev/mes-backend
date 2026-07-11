@@ -51,13 +51,9 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/users")
+    @PostMapping("/user")
     public ResponseEntity<UserDTO> createUser(@Valid @RequestBody CreateUserRequest request) {
-        User user = userService.createStandardUser(
-                request.getUsername(),
-                request.getPassword(),
-                request.getRoles()
-        );
+        User user = userService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new UserDTO(user));
     }
 

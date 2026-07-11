@@ -18,4 +18,6 @@ public class CreateUserRequest {
     private String password;
 
     private Set<String> roles;
+
+    private boolean ntlm;
 }
