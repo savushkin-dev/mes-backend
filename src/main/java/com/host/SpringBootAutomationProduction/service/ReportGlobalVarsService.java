@@ -8,9 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -45,15 +43,19 @@ public class ReportGlobalVarsService {
         log.debug("Сохранение всего списка переменных. Получено: {}, текущих: {}",
                 vars.size(), globalVarsRepository.count());
 
-        // Проверяем уникальность ключей в присланном списке
-        long uniqueKeysCount = vars.stream()
-                .map(ReportGlobalVars::getKey)
-                .distinct()
-                .count();
-
-        if (uniqueKeysCount != vars.size()) {
-            throw new IllegalArgumentException("В списке есть дубликаты ключей");
-        }
+        Set<String> keys = new HashSet<>();
+        vars.forEach(var -> {
+            String key = var.getKey();
+            if (key == null || key.isBlank()) {
+                throw new IllegalArgumentException("Ключ переменной не может быть null или пустым");
+            }
+            if (var.getValue() == null) {
+                throw new IllegalArgumentException("Значение переменной не может быть null");
+            }
+            if (!keys.add(key.trim())) {
+                throw new IllegalArgumentException("В списке есть дубликаты ключей");
+            }
+        });
 
         globalVarsRepository.deleteAllInBatch();
         List<ReportGlobalVars> saved = globalVarsRepository.saveAll(vars);
