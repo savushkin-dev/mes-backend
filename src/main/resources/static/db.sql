@@ -73,6 +73,15 @@ CREATE TABLE reportserver.BD_REPORT_GLOBALS
     DESCRIPTION VARCHAR DEFAULT ''
 );
 
+CREATE TABLE IF NOT EXISTS REPORT_ACCESS_LOG (
+                                                 ID BIGSERIAL PRIMARY KEY,
+                                                 CATEGORY VARCHAR(255) NOT NULL,
+                                                 REPORT_NAME VARCHAR(255) NOT NULL,
+                                                 ACCESS_TIME TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS IDX_REPORT_ACCESS_LOG_ACCESS_TIME ON REPORT_ACCESS_LOG(ACCESS_TIME);
+
 INSERT INTO reportserver.BD_ROLES (NAME) VALUES
                                              ('ROLE_ADMIN'),
                                              ('ROLE_VIEWER'),

@@ -1,58 +1,52 @@
 package com.host.SpringBootAutomationProduction.service;
 
+import com.host.SpringBootAutomationProduction.model.postgres.ReportAccessLog;
+import com.host.SpringBootAutomationProduction.repositories.postgres.ReportAccessLogRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Slf4j
+@Transactional(readOnly = true)
 @Service
 public class ReportMonitoringService {
 
-    private final Queue<ReportAccessEvent> events = new ConcurrentLinkedQueue<>();
-    private static final int MAX_EVENTS = 10000;
+    private final ReportAccessLogRepository logRepository;
 
-    @Data
-    @AllArgsConstructor
-    public static class ReportAccessEvent {
-        private String category;
-        private String reportName;
-        private LocalDateTime timestamp;
+    @Autowired
+    public ReportMonitoringService(ReportAccessLogRepository logRepository) {
+        this.logRepository = logRepository;
     }
 
     /**
-     * Логирует успешный доступ к отчету
+     * Логирует успешный доступ к отчету (асинхронно)
      */
+    @Async
+    @Transactional
     public void logReportAccess(String category, String reportName) {
-        events.offer(new ReportAccessEvent(category, reportName, LocalDateTime.now()));
+        ReportAccessLog reportLog = new ReportAccessLog();
+        reportLog.setCategory(category);
+        reportLog.setReportName(reportName);
+        reportLog.setAccessTime(LocalDateTime.now());
 
-        // Ограничиваем размер очереди
-        while (events.size() > MAX_EVENTS) {
-            events.poll();
-        }
+        logRepository.save(reportLog);
 
-        log.debug("Report accessed: {} / {}", category, reportName);
+        log.debug("Report access logged: {} / {}", category, reportName);
     }
 
     /**
      * Получить события за период
      */
-    public List<ReportAccessEvent> getEventsByPeriod(LocalDateTime from, LocalDateTime to) {
-        return events.stream()
-                .filter(e -> isBetween(e.getTimestamp(), from, to))
-                .toList();
+    public List<ReportAccessLog> getEventsByPeriod(LocalDateTime from, LocalDateTime to) {
+        return logRepository.findByAccessTimeBetweenOrderByAccessTimeDesc(from, to);
     }
 
-    /**
-     * Проверяет, находится ли timestamp в указанном периоде
-     */
-    private boolean isBetween(LocalDateTime timestamp, LocalDateTime from, LocalDateTime to) {
-        return !timestamp.isBefore(from) && !timestamp.isAfter(to);
-    }
 
 }

@@ -1,7 +1,7 @@
 package com.host.SpringBootAutomationProduction.controller;
 
+import com.host.SpringBootAutomationProduction.model.postgres.ReportAccessLog;
 import com.host.SpringBootAutomationProduction.service.ReportMonitoringService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -33,11 +33,11 @@ public class MonitoringController {
      * Пример: GET /api/monitoring/reports/events?from=2024-01-15T00:00:00&to=2024-01-15T23:59:59
      */
     @GetMapping("/reports/events")
-    public ResponseEntity<List<ReportMonitoringService.ReportAccessEvent>> getReportEvents(
+    public ResponseEntity<List<ReportAccessLog>> getReportEvents(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
 
-        List<ReportMonitoringService.ReportAccessEvent> events = monitoringService.getEventsByPeriod(from, to);
+        List<ReportAccessLog> events = monitoringService.getEventsByPeriod(from, to);
         return ResponseEntity.ok(events);
     }
 
