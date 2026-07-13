@@ -8,6 +8,7 @@ import com.host.SpringBootAutomationProduction.dto.ReportTemplateDTO;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportGlobalVars;
 import com.host.SpringBootAutomationProduction.model.postgres.ReportTemplate;
 import com.host.SpringBootAutomationProduction.service.ReportGlobalVarsService;
+import com.host.SpringBootAutomationProduction.service.ReportMonitoringService;
 import com.host.SpringBootAutomationProduction.service.ReportService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +31,14 @@ public class ReportController {
 
     private final ReportService reportService;
     private final ReportGlobalVarsService globalVarsService;
+    private final ReportMonitoringService monitoringService;
 
 
     @Autowired
-    public ReportController(ReportService reportService, ReportGlobalVarsService globalVarsService) {
+    public ReportController(ReportService reportService, ReportGlobalVarsService globalVarsService, ReportMonitoringService monitoringService) {
         this.reportService = reportService;
         this.globalVarsService = globalVarsService;
+        this.monitoringService = monitoringService;
     }
 
     @GetMapping("/{category}/{reportName}")
@@ -79,9 +82,12 @@ public class ReportController {
             @PathVariable("category") String category,
             @PathVariable("reportName") String reportName,
             @RequestBody ParametersDTO parameters) {
-        return ResponseEntity.ok(
-                reportService.getDataByReportName(category, reportName, parameters.getParameters())
-        );
+
+        Map<?,?> result = reportService.getDataByReportName(category, reportName, parameters.getParameters());
+
+        monitoringService.logReportAccess(category, reportName);
+
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/data")
