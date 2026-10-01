@@ -75,21 +75,23 @@ public class UserService {
     @Transactional
     public User createUser(CreateUserRequest request) {
         if (request.isNtlm()) {
-            return createNtlmUser(request.getUsername(), request.getRoles());
+            return createNtlmUser(request.getUsername(), request.getFio(), request.getRoles());
         }
         return createStandardUser(
                 request.getUsername(),
                 request.getPassword(),
+                request.getFio(),
                 request.getRoles()
         );
     }
 
     @Transactional
-    public User createNtlmUser(String username, Set<String> roleNames) {
+    public User createNtlmUser(String username, String fio, Set<String> roleNames) {
         User user = new User();
         user.setUsername(username);
         user.setAuthType(AuthType.NTLM);
         user.setPassword("-"); // Пароль не хранится для NTLM пользователей
+        user.setFio(fio);
         Set<Role> roles = getRolesWithViewer(roleNames);
         user.setRoles(roles);
         user.setEnabled(true);
@@ -100,13 +102,14 @@ public class UserService {
 
 
     @Transactional
-    public User createStandardUser(String username, String password, Set<String> roleNames) {
+    public User createStandardUser(String username, String password, String fio, Set<String> roleNames) {
         if (findByUsername(username).isPresent()) {
             throw new RuntimeException("Пользователь с именем '" + username + "' уже существует");
         }
 
         User user = new User();
         user.setUsername(username);
+        user.setFio(fio);
         user.setAuthType(AuthType.STANDARD);
         user.setPassword(passwordEncoder.encode(password));
 

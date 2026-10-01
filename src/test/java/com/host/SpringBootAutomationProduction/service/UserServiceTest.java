@@ -87,7 +87,7 @@ class UserServiceTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
         assertThatThrownBy(() ->
-                userService.createStandardUser("testuser", "password", roleNames)
+                userService.createStandardUser("testuser", "password", "Иванов И.И.", roleNames)
         )
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Пользователь с именем 'testuser' уже существует");
@@ -217,7 +217,7 @@ class UserServiceTest {
         when(roleService.findByRoleNames(anySet())).thenReturn(roles);
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
-        User result = userService.createStandardUser("newuser", specialPassword, roleNames);
+        User result = userService.createStandardUser("newuser", specialPassword,"Иванов И.И.", roleNames);
 
         assertThat(result).isNotNull();
         verify(passwordEncoder, times(1)).encode(specialPassword);
@@ -233,7 +233,7 @@ class UserServiceTest {
         when(roleService.findByRoleNames(anySet())).thenReturn(roles);
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
-        userService.createNtlmUser("ntlmuser", roleNames);
+        userService.createNtlmUser("ntlmuser","Иванов И.И.", roleNames);
 
         verify(passwordEncoder, never()).encode(anyString());
     }
@@ -253,7 +253,7 @@ class UserServiceTest {
         when(roleService.findByRoleNames(anySet())).thenReturn(roles);
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
-        userService.createStandardUser("newuser", "password", rolesWithoutViewer);
+        userService.createStandardUser("newuser", "password","Иванов И.И.", rolesWithoutViewer);
 
         verify(roleService, times(1)).findByRoleNames(argThat(roleSet ->
                 roleSet.contains("ROLE_VIEWER") && roleSet.contains("ROLE_ADMIN")

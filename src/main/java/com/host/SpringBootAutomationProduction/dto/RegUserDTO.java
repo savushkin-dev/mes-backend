@@ -20,6 +20,9 @@ public class RegUserDTO {
     @Size(min = 4, max = 50, message = "Пароль должен содержать от 4 до 50 символов")
     private String password;
 
+    @NotBlank
+    private String fio;
+
     public RegUserDTO(String username, String password) {
         this.username = username;
         this.password = password;

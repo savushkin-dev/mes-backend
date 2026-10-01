@@ -30,6 +30,7 @@ public class JWTUtil {
         return JWT.create()
                 .withClaim("roles", user.getRoleNames())
                 .withClaim("username", user.getUsername())
+                .withClaim("fio", user.getFio())
                 .withClaim("authType", user.getAuthType().name())
                 .withIssuedAt(new Date())
                 .withIssuer("Spring-Automation-Production")
