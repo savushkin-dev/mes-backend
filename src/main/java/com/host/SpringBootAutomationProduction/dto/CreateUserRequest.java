@@ -17,6 +17,9 @@ public class CreateUserRequest {
     @Size(min = 4, max = 50, message = "Пароль должен содержать от 4 до 50 символов")
     private String password;
 
+    @NotBlank
+    private String fio;
+
     private Set<String> roles;
 
     private boolean ntlm;

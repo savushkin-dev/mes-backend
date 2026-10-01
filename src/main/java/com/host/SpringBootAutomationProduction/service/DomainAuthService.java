@@ -77,8 +77,6 @@ public class DomainAuthService {
 
             if (isAuthenticated) {
                 log.info("User {} authenticated successfully", userPrincipal);
-            } else {
-                log.warn("Authentication failed for {}", userPrincipal);
             }
 
             return isAuthenticated;

@@ -28,6 +28,9 @@ public class User {
     @Column(name = "PASSWORD")
     private String password;
 
+    @Column(name = "FIO")
+    private String fio;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "AUTH_TYPE", nullable = false, length = 10)
     private AuthType authType;

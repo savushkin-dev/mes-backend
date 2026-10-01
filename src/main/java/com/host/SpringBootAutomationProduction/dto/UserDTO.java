@@ -16,12 +16,14 @@ public class UserDTO {
 
     private int id;
     private String username;
+    private String fio;
     private AuthType authType;
     private Set<RoleDTO> roles;
 
     public UserDTO(User user) {
         this.id = user.getId();
         this.username = user.getUsername();
+        this.fio = user.getFio();
         this.authType = user.getAuthType();
         this.roles = user.getRoles().stream()
                 .map(RoleDTO::new)

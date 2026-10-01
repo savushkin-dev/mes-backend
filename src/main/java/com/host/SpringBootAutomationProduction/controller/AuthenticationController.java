@@ -70,7 +70,7 @@ public class AuthenticationController {
 
         if (isNtlmAuthenticated) {
             Optional<User> findUser = userService.findByUsername(username);
-            user = findUser.orElseGet(() -> userService.createNtlmUser(username, new HashSet<>()));
+            user = findUser.orElseGet(() -> userService.createNtlmUser(username, "", new HashSet<>()));
         } else {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
             Optional<User> findUser = userService.findByUsername(username);
@@ -130,7 +130,7 @@ public class AuthenticationController {
             throw new UserNotCreatedException(errorMessage.toString());
         }
 
-        user = userService.createStandardUser(user.getUsername(), user.getPassword(), null);
+        user = userService.createStandardUser(user.getUsername(), user.getPassword(), user.getFio(), null);
 
         String accessToken = jwtUtil.generateAccessToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
